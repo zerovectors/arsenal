@@ -1390,7 +1390,7 @@ miscellaneous:AddButton("Rejoin", function(state)
   game:GetService('TeleportService'):Teleport(game.PlaceId)
 end)
 
-changelog:AddLabel("V2 ( CURRENT VERSION )\n + Rewrote UI\n + Fixed cancerous button bugs\n + 300 lines shorter than the original\n + Better just better\n \nV1.3\n + Released ui\n + Bug fixes\n - Removed Chatlogs since there's too many bugs with them\n \nV1.1\n + Created UI\n + Released UI")
+changelog:AddLabel("V2.3 ( CURRENT VERSION )\n + Added FOV Aimbot (credits; Avexus#1866)\nV2\n + Rewrote UI\n + Fixed cancerous button bugs\n + 300 lines shorter than the original\n + Better just better\n \nV1.3\n + Released ui\n + Bug fixes\n - Removed Chatlogs since there's too many bugs with them\n \nV1.1\n + Created UI\n + Released UI")
 
 UserInput.InputBegan:Connect(function(input)
   if tostring(input.KeyCode) == settings.togglekey or tostring(input.UserInputType) == settings.togglekey then
