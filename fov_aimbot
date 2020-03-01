@@ -101,10 +101,10 @@ trigger_toggled = false
 trigger_delay = 1/20
 
 -- esp
-esp_toggled = true
+esp_toggled = false
 esp_bones = false
-esp_chams = true
-esp_tracers = true
+esp_chams = false
+esp_tracers = false
 -- item_esp (coming soon)
 linesize = 1
 showdists = true
@@ -231,9 +231,9 @@ KeysList.Active = false
 KeysList.TextXAlignment = Enum.TextXAlignment.Left
 KeysList.TextYAlignment = Enum.TextYAlignment.Bottom
 KeysList.Text = 'AimBot Toggle: '..toggle_aimbot.Name..'\nAim Toggle: '..toggle_aim.Name..'\nAim Part Toggle: '..targetpart_change.Name..'\nPriority Toggle: '..priority_toggle.Name
-..'\nESP Toggle: '..toggle_esp.Name..'\nBones Toggle: '..toggle_bones.Name..'\nChams Toggle: '..toggle_chams.Name..'\nBoxes Toggle: '..toggle_boxes.Name..'\nFOV Increase: '..fov_increase.Name..'\nFOV Decrease: '..fov_decrease.Name..'\nSens Increase: '
+..'\n'..'\nFOV Increase: '..fov_increase.Name..'\nFOV Decrease: '..fov_decrease.Name..'\nSens Increase: '
 ..sens_increase.Name..'\nSens Decrease: '..sens_decrease.Name..'\nTrigger Toggle: '..toggle_trigger.Name..'\nFFA Toggle: '..ffatoggle.Name..'\nHide Cheats: '..toggle_gui.Name
-..'\nChange ESP Origin: '..toggle_bottompos.Name..'\nPerformance Mode: '..toggle_performance.Name..'\nChange Font: '..toggle_font.Name
+..'\nPerformance Mode: '..toggle_performance.Name..'\nChange Font: '..toggle_font.Name
 
 local n = 0
 
