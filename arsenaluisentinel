@@ -1,0 +1,1438 @@
+if not getgenv().SENTINEL_V2 and not getgenv().SENTINEL_LOADED then return end
+local library = loadstring(game:HttpGet("https://pastebin.com/raw/AqZYACS7", true))()
+local aimbot = library:CreateWindow({
+  text = "Aimbot"
+})
+local visuals = library:CreateWindow({
+  text = "Visuals"
+})
+local character = library:CreateWindow({
+  text = "Character"
+})
+local miscellaneous = library:CreateWindow({
+  text = "Miscellaneous"
+})
+local changelog = library:CreateWindow({
+  text = "View Changelog"
+})
+
+local credits = library:CreateWindow({text='Credits'})
+credits:AddLabel("Credits\nInori: Dragging\nwally: UI\n Avexus#1866; FOV Aimbot")
+
+function GetCamera() -- Just in case some game renames the player's camera.
+	return workspace:FindFirstChildOfClass("Camera")
+end
+local Plrs = game:GetService("Players")
+local Run = game:GetService("RunService")
+local CoreGui = game:GetService("CoreGui")
+local StartGui = game:GetService("StarterGui")
+local Teams = game:GetService("Teams")
+local UserInput = game:GetService("UserInputService")
+local Light = game:GetService("Lighting")
+local HTTP = game:GetService("HttpService")
+local RepStor = game:GetService("ReplicatedStorage")
+local MyPlr = Plrs.LocalPlayer
+local MyChar = MyPlr.Character
+local char = MyPlr.Character
+local MyMouse = MyPlr:GetMouse()
+local mouse = game.Players.LocalPlayer:GetMouse();
+local UserInput = game:GetService("UserInputService")
+local MyCam = GetCamera()
+
+if MyCam == nil then
+	error("WHAT KIND OF BLACK MAGIC IS THIS, CAMERA NOT FOUND.")
+	return
+end
+
+local settings = {
+  AimbotEnabled = false;
+  Aimbot = false;
+  AutoFire = false;
+  speed = false;
+  jump = false;
+  vfly = false;
+  CHAMSEnabled = false,
+  CHAMSLength = 500,
+  MobChams = false,
+  TracersEnabled = false, -- Self explanatory. LEAVE OFF BY DEFAULT.
+  TracersLength = 500, -- MAX DISTANCE IS 2048 DO NOT GO ABOVE OR YOU'LL ENCOUNTER PROBLEMS.
+  PlaceTracersUnderCharacter = false,
+  fullbright = false;
+  DebugInfo = false;
+  FreeForAll = false;
+  walkspeedtog = false;
+  instantrespawn = false;
+  vis = true;
+  Blacklist = { };
+  FriendList = { };
+  AimbotKey = "Enum.UserInputType.MouseButton2";
+  Colors = {
+    Enemy = Color3.new(1, 0, 0),
+    Ally = Color3.new(0, 1, 0),
+    Friend = Color3.new(1, 1, 0),
+    Neutral = Color3.new(1, 1, 1),
+    Crosshair = Color3.new(1, 0, 0),
+    ColorOverride = nil, -- Every player will have the chosen color regardless of enemy or ally.
+  },
+  ClosestEnemy = nil;
+  CharAddedEvent = { };
+  CameraModeBackup = MyPlr.CameraMode;
+  GameSpecificCrap = {
+  };
+  Mob_ESP_CHAMS_Ran_Once = false,
+}
+
+local Tracers = Instance.new("Folder", MyCam)
+	Tracers.Name = "Tracers"
+	local TracerData = { }
+	local TracerMT = setmetatable(TracerData, {
+		__newindex = function(tab, index, val)
+			rawset(tab, index, val)
+		end
+})
+
+local ChamsFolder = Instance.new("Folder", CoreGui)
+ChamsFolder.Name = "Chams"
+local PlayerChams = Instance.new("Folder", ChamsFolder)
+PlayerChams.Name = "PlayerChams"
+local ItemChams = Instance.new("Folder", ChamsFolder)
+ItemChams.Name = "ItemChams"
+
+if settings.CHAMSLength > 2048 then
+	settings.CHAMSLength = 2048
+end
+
+if settings.TracersLength > 2048 then
+	settings.TracersLength = 2048
+end
+
+function GetSizeOfObject(Obj)
+	if Obj:IsA("BasePart") then
+		return Obj.Size
+	elseif Obj:IsA("Model") then
+		return Obj:GetExtentsSize()
+	end
+end
+
+function GetTeamColor(Plr)
+	if Plr == nil then return nil end
+	if not Plr:IsA("Player") then
+		return nil
+	end
+	local PickedColor = settings.Colors.Enemy
+
+	if Plr ~= nil then
+		if game.PlaceId == 606849621 then
+			if settings.Colors.ColorOverride == nil then
+				if not settings.FreeForAll then
+					if MyPlr.Team ~= nil and Plr.Team ~= nil then
+						if settings.FriendList[Plr.Name] == nil then
+							if MyPlr.Team.Name == "Prisoner" then
+								if Plr.Team == MyPlr.Team or Plr.Team.Name == "Criminal" then
+									PickedColor = settings.Colors.Ally
+								else
+									PickedColor = settings.Colors.Enemy
+								end
+							elseif MyPlr.Team.Name == "Criminal" then
+								if Plr.Team == MyPlr.Team or Plr.Team.Name == "Prisoner" then
+									PickedColor = settings.Colors.Ally
+								else
+									PickedColor = settings.Colors.Enemy
+								end
+							elseif MyPlr.Team.Name == "Police" then
+								if Plr.Team == MyPlr.Team then
+									PickedColor = settings.Colors.Ally
+								else
+									if Plr.Team.Name == "Criminal" then
+										PickedColor = settings.Colors.Enemy
+									elseif Plr.Team.Name == "Prisoner" then
+										PickedColor = settings.Colors.Neutral
+									end
+								end
+							end
+						else
+							PickedColor = settings.Colors.Friend
+						end
+					end
+				else
+					if settings.FriendList[Plr.Name] ~= nil then
+						PickedColor = settings.Colors.Friend
+					else
+						PickedColor = settings.Colors.Enemy
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 155615604 then
+			if settings.Colors.ColorOverride == nil then
+				if MyPlr.Team ~= nil and Plr.Team ~= nil then
+					if settings.FriendList[Plr.Name] == nil then
+						if MyPlr.Team.Name == "Inmates" then
+							if Plr.Team.Name == "Inmates" then
+								PickedColor = settings.Colors.Ally
+							elseif Plr.Team.Name == "Guards" or Plr.Team.Name == "Criminals" then
+								PickedColor = settings.Colors.Enemy
+							else
+								PickedColor = settings.Colors.Neutral
+							end
+						elseif MyPlr.Team.Name == "Guards" then
+							if Plr.Team.Name == "Inmates" then
+								PickedColor = settings.Colors.Neutral
+							elseif Plr.Team.Name == "Criminals" then
+								PickedColor = settings.Colors.Enemy
+							elseif Plr.Team.Name == "Guards" then
+								PickColor = settings.Colors.Ally
+							end
+						elseif MyPlr.Team.Name == "Criminals" then
+							if Plr.Team.Name == "Inmates" then
+								PickedColor = settings.Colors.Ally
+							elseif Plr.Team.Name == "Guards" then
+								PickedColor = settings.Colors.Enemy
+							else
+								PickedColor = settings.Colors.Neutral
+							end
+						end
+					else
+						PickedColor = settings.Colors.Friend
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 746820961 then
+			if settings.Colors.ColorOverride == nil then
+				if MyPlr:FindFirstChild("TeamC") and Plr:FindFirstChild("TeamC") then
+					if Plr.TeamC.Value == MyPlr.TeamC.Value then
+						PickedColor = settings.Colors.Ally
+					else
+						PickedColor = settings.Colors.Enemy
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 1382113806 then
+			if settings.Colors.ColorOverride == nil then
+				if MyPlr:FindFirstChild("role") and Plr:FindFirstChild("role") then
+					if MyPlr.role.Value == "assassin" then
+						if Plr.role.Value == "target" then
+							PickedColor = settings.Colors.Enemy
+						elseif Plr.role.Value == "guard" then
+							PickedColor = Color3.new(1, 135 / 255, 0)
+						else
+							PickedColor = settings.Colors.Neutral
+						end
+					elseif MyPlr.role.Value == "target" then
+						if Plr.role.Value == "guard" then
+							PickedColor = settings.Colors.Ally
+						elseif Plr.role.Value == "assassin" then
+							PickedColor = settings.Colors.Enemy
+						else
+							PickedColor = settings.Colors.Neutral
+						end
+					elseif MyPlr.role.Value == "guard" then
+						if Plr.role.Value == "target" then
+							PickedColor = settings.Colors.Friend
+						elseif Plr.role.Value == "guard" then
+							PickedColor = settings.Colors.Ally
+						elseif Plr.role.Value == "assassin" then
+							PickedColor = settings.Colors.Enemy
+						else
+							PickedColor = settings.Colors.Neutral
+						end
+					else
+						if MyPlr.role.Value == "none" then
+							PickedColor = settings.Colors.Neutral
+						end
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 1072809192 then
+			if MyPlr:FindFirstChild("Backpack") and Plr:FindFirstChild("Backpack") then
+				if MyPlr.Backpack:FindFirstChild("Knife") or MyChar:FindFirstChild("Knife") then
+					if Plr.Backpack:FindFirstChild("Revolver") or Plr.Character:FindFirstChild("Revolver") then
+						PickedColor = settings.Colors.Enemy
+					else
+						PickedColor = Color3.new(1, 135 / 255, 0)
+					end
+				elseif MyPlr.Backpack:FindFirstChild("Revolver") or MyChar:FindFirstChild("Revolver") then
+					if Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife") then
+						PickedColor = settings.Colors.Enemy
+					elseif Plr.Backpack:FindFirstChild("Revolver") or Plr.Character:FindFirstChild("Revolver") then
+						PickedColor = settings.Colors.Enemy
+					else
+						PickedColor = settings.Colors.Ally
+					end
+				else
+					if Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife") then
+						PickedColor = settings.Colors.Enemy
+					elseif Plr.Backpack:FindFirstChild("Revolver") or Plr.Character:FindFirstChild("Revolver") then
+						PickedColor = settings.Colors.Ally
+					else
+						PickedColor = settings.Colors.Neutral
+					end
+				end
+			end
+		elseif game.PlaceId == 142823291 or game.PlaceId == 1122507250 then
+			if MyPlr:FindFirstChild("Backpack") and Plr:FindFirstChild("Backpack") then
+				if MyPlr.Backpack:FindFirstChild("Knife") or MyChar:FindFirstChild("Knife") then
+					if (Plr.Backpack:FindFirstChild("Gun") or Plr.Backpack:FindFirstChild("Revolver")) or (Plr.Character:FindFirstChild("Gun") or Plr.Character:FindFirstChild("Revolver")) then
+						PickedColor = settings.Colors.Enemy
+					else
+						PickedColor = Color3.new(1, 135 / 255, 0)
+					end
+				elseif (MyPlr.Backpack:FindFirstChild("Gun") or MyPlr.Backpack:FindFirstChild("Revolver")) or (MyChar:FindFirstChild("Gun") or MyChar:FindFirstChild("Revolver")) then
+					if Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife") then
+						PickedColor = settings.Colors.Enemy
+					else
+						PickedColor = settings.Colors.Ally
+					end
+				else
+					if Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife") then
+						PickedColor = settings.Colors.Enemy
+					elseif (Plr.Backpack:FindFirstChild("Gun") or Plr.Backpack:FindFirstChild("Revolver")) or (Plr.Character:FindFirstChild("Gun") or Plr.Character:FindFirstChild("Revolver")) then
+						PickedColor = settings.Colors.Ally
+					else
+						PickedColor = settings.Colors.Neutral
+					end
+				end
+			end
+		elseif game.PlaceId == 379614936 then
+			if settings.Colors.ColorOverride == nil then
+				if not settings.FriendList[Plr.Name] then
+					local targ = MyPlr:FindFirstChild("PlayerGui"):FindFirstChild("ScreenGui"):FindFirstChild("UI"):FindFirstChild("Target"):FindFirstChild("Img"):FindFirstChild("PlayerText")
+					if targ then
+						if Plr.Name:lower() == targ.Text:lower() then
+							PickedColor = settings.Colors.Enemy
+						else
+							PickedColor = settings.Colors.Neutral
+						end
+					else
+						PickedColor = settings.Colors.Neutral
+					end
+				else
+					PickedColor = settings.Colors.Friend
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 983224898 then
+			if (tick() - wildrevolvertick) > 10 or wildrevolverteamdata == nil then
+				wildrevolverteamdata = RepStor.Functions.RequestGameData:InvokeServer()
+				wildrevolvertick = tick()
+				return settings.Colors.Neutral
+			end
+			local succ = pcall(function()
+				if wildrevolverteamdata[Plr.Name] ~= nil then
+					if settings.Colors.ColorOverride == nil then
+						if not settings.FriendList[Plr.Name] then
+							if wildrevolverteamdata[Plr.Name]["TeamName"] == wildrevolverteamdata[MyPlr.Name]["TeamName"] then
+								PickedColor = settings.Colors.Ally
+							else
+								PickedColor = settings.Colors.Enemy
+							end
+						else
+							PickedColor = settings.Colors.Friend
+						end
+					else
+						PickedColor = settings.Colors.ColorOverride
+					end
+				else
+					PickedColor = settings.Colors.Neutral
+				end
+			end)
+			if not succ then
+				wildrevolverteamdata = RepStor.Functions.RequestGameData:InvokeServer()
+				wildrevolvertick = tick()
+				return settings.Colors.Neutral
+			end
+		else
+			if settings.Colors.ColorOverride == nil then
+				if not settings.FreeForAll then
+					if MyPlr.Team ~= Plr.Team and not settings.FriendList[Plr.Name] then
+						PickedColor = settings.Colors.Enemy
+					elseif MyPlr.Team == Plr.Team and not settings.FriendList[Plr.Name] then
+						PickedColor = settings.Colors.Ally
+					else
+						PickedColor = settings.Colors.Friend
+					end
+				else
+					if settings.FriendList[Plr.Name] ~= nil then
+						PickedColor = settings.Colors.Friend
+					else
+						PickedColor = settings.Colors.Enemy
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		end
+	end
+
+	return PickedColor
+end
+
+function UpdateTracer(Plr)
+	if settings.TracersEnabled then
+		if MyChar then
+			local MyTor = MyChar:FindFirstChild("HumanoidRootPart")
+			local GetTor = TracerData[Plr.Name]
+			if MyTor and GetTor ~= nil and GetTor.Parent ~= nil then
+				local Dist = (MyTor.Position - GetTor.Position).magnitude
+				if (Dist < settings.TracersLength and not settings.Blacklist[Plr.Name]) and not (MyChar:FindFirstChild("InVehicle") or GetTor.Parent:FindFirstChild("InVehicle")) then
+					if not settings.PlaceTracersUnderCharacter then
+						local R = MyCam:ScreenPointToRay(MyCam.ViewportSize.X / 2, MyCam.ViewportSize.Y, 0)
+						Dist = (R.Origin - (GetTor.Position - Vector3.new(0, 3, 0))).magnitude
+						Tracers[Plr.Name].Transparency = 1
+						Tracers[Plr.Name].Size = Vector3.new(0.05, 0.05, Dist)
+						Tracers[Plr.Name].CFrame = CFrame.new(R.Origin, (GetTor.Position - Vector3.new(0, 4.5, 0))) * CFrame.new(0, 0, -Dist / 2)
+						Tracers[Plr.Name].BrickColor = BrickColor.new(GetTeamColor(Plr))
+						Tracers[Plr.Name].BoxHandleAdornment.Transparency = 0
+						Tracers[Plr.Name].BoxHandleAdornment.Size = Vector3.new(0.001, 0.001, Dist)
+						Tracers[Plr.Name].BoxHandleAdornment.Color3 = GetTeamColor(Plr)
+					else
+						Dist = (MyTor.Position - (GetTor.Position - Vector3.new(0, 3, 0))).magnitude
+						Tracers[Plr.Name].Transparency = 1
+						Tracers[Plr.Name].Size = Vector3.new(0.3, 0.3, Dist)
+						Tracers[Plr.Name].CFrame = CFrame.new(MyTor.Position - Vector3.new(0, 3, 0), (GetTor.Position - Vector3.new(0, 4.5, 0))) * CFrame.new(0, 0, -Dist / 2)
+						Tracers[Plr.Name].BrickColor = BrickColor.new(GetTeamColor(Plr))
+						Tracers[Plr.Name].BoxHandleAdornment.Transparency = 0
+						Tracers[Plr.Name].BoxHandleAdornment.Size = Vector3.new(0.05, 0.05, Dist)
+						Tracers[Plr.Name].BoxHandleAdornment.Color3 = GetTeamColor(Plr)
+					end
+				else
+					Tracers[Plr.Name].Transparency = 1
+					Tracers[Plr.Name].BoxHandleAdornment.Transparency = 1
+				end
+			end
+		end
+	end
+end
+
+function RemoveTracers(Plr)
+	local Find = Tracers:FindFirstChild(Plr.Name)
+	if Find then
+		Find:Destroy()
+	end
+end
+
+function CreateTracers(Plr)
+	local Find = Tracers:FindFirstChild(Plr.Name)
+	if not Find then
+		local P = Instance.new("Part")
+		P.Name = Plr.Name
+		P.Material = "Neon"
+		P.Transparency = 1
+		P.Anchored = true
+		P.Locked = true
+		P.CanCollide = false
+		local B = Instance.new("BoxHandleAdornment", P)
+		B.Adornee = P
+		B.Size = GetSizeOfObject(P)
+		B.AlwaysOnTop = true
+		B.ZIndex = 5
+		B.Transparency = 0
+		B.Color3 = GetTeamColor(Plr) or settings.Colors.Neutral
+		P.Parent = Tracers
+
+		coroutine.resume(coroutine.create(function()
+			while Tracers:FindFirstChild(Plr.Name) do
+				UpdateTracer(Plr)
+				Run.RenderStepped:wait()
+			end
+		end))
+	end
+end
+
+function FindCham(Obj)
+	for i, v in next, ItemChams:GetChildren() do
+		if v.className == "ObjectValue" then
+			if v.Value == Obj then
+				return v.Parent
+			end
+		end
+	end
+
+	return nil
+end
+
+function UpdateChams(Obj)
+	if Obj == nil then return end
+
+	if Obj:IsA("Player") then
+		local Find = PlayerChams:FindFirstChild(Obj.Name)
+		local GetChar = Obj.Character
+
+		local Trans = 0
+		if GetChar and MyChar then
+			local GetHead = GetChar:FindFirstChild("Head")
+			local GetTor = GetChar:FindFirstChild("HumanoidRootPart")
+			local MyHead = MyChar:FindFirstChild("Head")
+			local MyTor = MyChar:FindFirstChild("HumanoidRootPart")
+			if GetHead and GetTor and MyHead and MyTor then
+				if (MyTor.Position - GetTor.Position).magnitude > settings.CHAMSLength or settings.Blacklist[Obj.Name] then
+					Trans = 1
+				else
+					--local MyCharStuff = MyChar:GetDescendants()
+					local Ray = Ray.new(MyCam.CFrame.p, (GetTor.Position - MyCam.CFrame.p).unit * 2048)
+					local part = workspace:FindPartOnRayWithIgnoreList(Ray, {MyChar})
+					if part ~= nil then
+						if part:IsDescendantOf(GetChar) then
+							Trans = 0.9
+						else
+							Trans = 0
+						end
+					end
+				end
+			end
+		end
+
+		if Find then
+			for i, v in next, Find:GetChildren() do
+				if v.className ~= "ObjectValue" then
+					v.Color3 = GetTeamColor(Obj) or settings.Colors.Neutral
+					v.Transparency = Trans
+				end
+			end
+		end
+	end
+end
+
+function RemoveChams(Obj)
+	if Obj ~= nil then
+		local IsPlr = Obj:IsA("Player")
+		local UseFolder = ItemChams
+		if IsPlr then UseFolder = PlayerChams end
+
+		local FindC = UseFolder:FindFirstChild(tostring(Obj)) or FindCham(Obj)
+		if FindC then
+			FindC:Destroy()
+		end
+	end
+end
+
+function CreateChams(Obj)
+	if Obj ~= nil then
+		local IsPlr = Obj:IsA("Player")
+		local UseFolder = ItemChams
+		local Crap = nil
+		local GetTor = nil
+		local t = tick()
+		if IsPlr then
+			Obj = Obj.Character
+			UseFolder = PlayerChams
+		end
+		if Obj == nil then return end
+		GetTor = Obj:FindFirstChild("HumanoidRootPart") or Obj:WaitForChild("HumanoidRootPart")
+		if IsPlr then Crap = Obj:GetChildren() else Crap = Obj:GetDescendants() end
+
+		local FindC = ((IsPlr) and UseFolder:FindFirstChild(Obj.Name)) or FindCham(Obj)
+		if not FindC then
+			FindC = Instance.new("Folder", UseFolder)
+			FindC.Name = Obj.Name
+			local ObjVal = Instance.new("ObjectValue", FindC)
+			ObjVal.Value = Obj
+		end
+
+		for _, P in next, Crap do
+			if P:IsA("PVInstance") and P.Name ~= "HumanoidRootPart" then
+				local Box = Instance.new("BoxHandleAdornment")
+				Box.Size = GetSizeOfObject(P)
+				Box.Name = "Cham"
+				Box.Adornee = P
+				Box.AlwaysOnTop = true
+				Box.ZIndex = 5
+				Box.Transparency = 0
+				Box.Color3 = ((IsPlr) and GetTeamColor(Plrs:GetPlayerFromCharacter(Obj))) or settings.Colors.Neutral
+				Box.Parent = FindC
+			end
+		end
+	end
+end
+
+function CreateMobESPChams()
+	local mobspawn = { }
+
+	for i, v in next, workspace:GetDescendants() do
+		local hum = v:FindFirstChildOfClass("Humanoid")
+		if hum and not Plrs:GetPlayerFromCharacter(hum.Parent) and FindCham(v) == nil and FindESP(v) == nil then
+			mobspawn[tostring(v.Parent)] = v.Parent
+			if settings.CHAMSEnabled and settings.MobChams then
+				CreateChams(v)
+			end
+			if settings.ESPEnabled and settings.MobESP then
+				CreateESP(v)
+			end
+		end
+	end
+
+	if settings.Mob_ESP_CHAMS_Ran_Once == false then
+		for i, v in next, mobspawn do
+			v.ChildAdded:connect(function(Obj)
+				if settings.MobChams then
+					local t = tick()
+					local GetHum = Obj:FindFirstChildOfClass("Humanoid")
+					if GetHum == nil then
+						repeat
+							GetHum = Obj:FindFirstChildOfClass("Humanoid")
+							wait()
+						until GetHum ~= nil or (tick() - t) >= 10
+					end
+					if GetHum == nil then return end
+
+					CreateChams(Obj)
+				end
+
+				if settings.MobESP then
+					local t = tick()
+					local GetHum = Obj:FindFirstChildOfClass("Humanoid")
+					if GetHum == nil then
+						repeat
+							GetHum = Obj:FindFirstChildOfClass("Humanoid")
+							wait()
+						until GetHum ~= nil or (tick() - t) >= 10
+					end
+					if GetHum == nil then return end
+
+					CreateESP(Obj)
+				end
+			end)
+		end
+
+		settings.Mob_ESP_CHAMS_Ran_Once = true
+	end
+end
+
+function GetTeamColor(Plr)
+	if Plr == nil then return nil end
+	if not Plr:IsA("Player") then
+		return nil
+	end
+	local PickedColor = settings.Colors.Enemy
+
+	if Plr ~= nil then
+		if game.PlaceId == 606849621 then
+			if settings.Colors.ColorOverride == nil then
+				if not settings.FreeForAll then
+					if MyPlr.Team ~= nil and Plr.Team ~= nil then
+						if settings.FriendList[Plr.Name] == nil then
+							if MyPlr.Team.Name == "Prisoner" then
+								if Plr.Team == MyPlr.Team or Plr.Team.Name == "Criminal" then
+									PickedColor = settings.Colors.Ally
+								else
+									PickedColor = settings.Colors.Enemy
+								end
+							elseif MyPlr.Team.Name == "Criminal" then
+								if Plr.Team == MyPlr.Team or Plr.Team.Name == "Prisoner" then
+									PickedColor = settings.Colors.Ally
+								else
+									PickedColor = settings.Colors.Enemy
+								end
+							elseif MyPlr.Team.Name == "Police" then
+								if Plr.Team == MyPlr.Team then
+									PickedColor = settings.Colors.Ally
+								else
+									if Plr.Team.Name == "Criminal" then
+										PickedColor = settings.Colors.Enemy
+									elseif Plr.Team.Name == "Prisoner" then
+										PickedColor = settings.Colors.Neutral
+									end
+								end
+							end
+						else
+							PickedColor = settings.Colors.Friend
+						end
+					end
+				else
+					if settings.FriendList[Plr.Name] ~= nil then
+						PickedColor = settings.Colors.Friend
+					else
+						PickedColor = settings.Colors.Enemy
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 155615604 then
+			if settings.Colors.ColorOverride == nil then
+				if MyPlr.Team ~= nil and Plr.Team ~= nil then
+					if settings.FriendList[Plr.Name] == nil then
+						if MyPlr.Team.Name == "Inmates" then
+							if Plr.Team.Name == "Inmates" then
+								PickedColor = settings.Colors.Ally
+							elseif Plr.Team.Name == "Guards" or Plr.Team.Name == "Criminals" then
+								PickedColor = settings.Colors.Enemy
+							else
+								PickedColor = settings.Colors.Neutral
+							end
+						elseif MyPlr.Team.Name == "Guards" then
+							if Plr.Team.Name == "Inmates" then
+								PickedColor = settings.Colors.Neutral
+							elseif Plr.Team.Name == "Criminals" then
+								PickedColor = settings.Colors.Enemy
+							elseif Plr.Team.Name == "Guards" then
+								PickColor = settings.Colors.Ally
+							end
+						elseif MyPlr.Team.Name == "Criminals" then
+							if Plr.Team.Name == "Inmates" then
+								PickedColor = settings.Colors.Ally
+							elseif Plr.Team.Name == "Guards" then
+								PickedColor = settings.Colors.Enemy
+							else
+								PickedColor = settings.Colors.Neutral
+							end
+						end
+					else
+						PickedColor = settings.Colors.Friend
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 746820961 then
+			if settings.Colors.ColorOverride == nil then
+				if MyPlr:FindFirstChild("TeamC") and Plr:FindFirstChild("TeamC") then
+					if Plr.TeamC.Value == MyPlr.TeamC.Value then
+						PickedColor = settings.Colors.Ally
+					else
+						PickedColor = settings.Colors.Enemy
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 1382113806 then
+			if settings.Colors.ColorOverride == nil then
+				if MyPlr:FindFirstChild("role") and Plr:FindFirstChild("role") then
+					if MyPlr.role.Value == "assassin" then
+						if Plr.role.Value == "target" then
+							PickedColor = settings.Colors.Enemy
+						elseif Plr.role.Value == "guard" then
+							PickedColor = Color3.new(1, 135 / 255, 0)
+						else
+							PickedColor = settings.Colors.Neutral
+						end
+					elseif MyPlr.role.Value == "target" then
+						if Plr.role.Value == "guard" then
+							PickedColor = settings.Colors.Ally
+						elseif Plr.role.Value == "assassin" then
+							PickedColor = settings.Colors.Enemy
+						else
+							PickedColor = settings.Colors.Neutral
+						end
+					elseif MyPlr.role.Value == "guard" then
+						if Plr.role.Value == "target" then
+							PickedColor = settings.Colors.Friend
+						elseif Plr.role.Value == "guard" then
+							PickedColor = settings.Colors.Ally
+						elseif Plr.role.Value == "assassin" then
+							PickedColor = settings.Colors.Enemy
+						else
+							PickedColor = settings.Colors.Neutral
+						end
+					else
+						if MyPlr.role.Value == "none" then
+							PickedColor = settings.Colors.Neutral
+						end
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 1072809192 then
+			if MyPlr:FindFirstChild("Backpack") and Plr:FindFirstChild("Backpack") then
+				if MyPlr.Backpack:FindFirstChild("Knife") or MyChar:FindFirstChild("Knife") then
+					if Plr.Backpack:FindFirstChild("Revolver") or Plr.Character:FindFirstChild("Revolver") then
+						PickedColor = settings.Colors.Enemy
+					else
+						PickedColor = Color3.new(1, 135 / 255, 0)
+					end
+				elseif MyPlr.Backpack:FindFirstChild("Revolver") or MyChar:FindFirstChild("Revolver") then
+					if Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife") then
+						PickedColor = settings.Colors.Enemy
+					elseif Plr.Backpack:FindFirstChild("Revolver") or Plr.Character:FindFirstChild("Revolver") then
+						PickedColor = settings.Colors.Enemy
+					else
+						PickedColor = settings.Colors.Ally
+					end
+				else
+					if Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife") then
+						PickedColor = settings.Colors.Enemy
+					elseif Plr.Backpack:FindFirstChild("Revolver") or Plr.Character:FindFirstChild("Revolver") then
+						PickedColor = settings.Colors.Ally
+					else
+						PickedColor = settings.Colors.Neutral
+					end
+				end
+			end
+		elseif game.PlaceId == 142823291 or game.PlaceId == 1122507250 then
+			if MyPlr:FindFirstChild("Backpack") and Plr:FindFirstChild("Backpack") then
+				if MyPlr.Backpack:FindFirstChild("Knife") or MyChar:FindFirstChild("Knife") then
+					if (Plr.Backpack:FindFirstChild("Gun") or Plr.Backpack:FindFirstChild("Revolver")) or (Plr.Character:FindFirstChild("Gun") or Plr.Character:FindFirstChild("Revolver")) then
+						PickedColor = settings.Colors.Enemy
+					else
+						PickedColor = Color3.new(1, 135 / 255, 0)
+					end
+				elseif (MyPlr.Backpack:FindFirstChild("Gun") or MyPlr.Backpack:FindFirstChild("Revolver")) or (MyChar:FindFirstChild("Gun") or MyChar:FindFirstChild("Revolver")) then
+					if Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife") then
+						PickedColor = settings.Colors.Enemy
+					else
+						PickedColor = settings.Colors.Ally
+					end
+				else
+					if Plr.Backpack:FindFirstChild("Knife") or Plr.Character:FindFirstChild("Knife") then
+						PickedColor = settings.Colors.Enemy
+					elseif (Plr.Backpack:FindFirstChild("Gun") or Plr.Backpack:FindFirstChild("Revolver")) or (Plr.Character:FindFirstChild("Gun") or Plr.Character:FindFirstChild("Revolver")) then
+						PickedColor = settings.Colors.Ally
+					else
+						PickedColor = settings.Colors.Neutral
+					end
+				end
+			end
+		elseif game.PlaceId == 379614936 then
+			if settings.Colors.ColorOverride == nil then
+				if not settings.FriendList[Plr.Name] then
+					local targ = MyPlr:FindFirstChild("PlayerGui"):FindFirstChild("ScreenGui"):FindFirstChild("UI"):FindFirstChild("Target"):FindFirstChild("Img"):FindFirstChild("PlayerText")
+					if targ then
+						if Plr.Name:lower() == targ.Text:lower() then
+							PickedColor = settings.Colors.Enemy
+						else
+							PickedColor = settings.Colors.Neutral
+						end
+					else
+						PickedColor = settings.Colors.Neutral
+					end
+				else
+					PickedColor = settings.Colors.Friend
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		elseif game.PlaceId == 983224898 then
+			if (tick() - wildrevolvertick) > 10 or wildrevolverteamdata == nil then
+				wildrevolverteamdata = RepStor.Functions.RequestGameData:InvokeServer()
+				wildrevolvertick = tick()
+				return settings.Colors.Neutral
+			end
+			local succ = pcall(function()
+				if wildrevolverteamdata[Plr.Name] ~= nil then
+					if settings.Colors.ColorOverride == nil then
+						if not settings.FriendList[Plr.Name] then
+							if wildrevolverteamdata[Plr.Name]["TeamName"] == wildrevolverteamdata[MyPlr.Name]["TeamName"] then
+								PickedColor = settings.Colors.Ally
+							else
+								PickedColor = settings.Colors.Enemy
+							end
+						else
+							PickedColor = settings.Colors.Friend
+						end
+					else
+						PickedColor = settings.Colors.ColorOverride
+					end
+				else
+					PickedColor = settings.Colors.Neutral
+				end
+			end)
+			if not succ then
+				wildrevolverteamdata = RepStor.Functions.RequestGameData:InvokeServer()
+				wildrevolvertick = tick()
+				return settings.Colors.Neutral
+			end
+		else
+			if settings.Colors.ColorOverride == nil then
+				if not settings.FreeForAll then
+					if MyPlr.Team ~= Plr.Team and not settings.FriendList[Plr.Name] then
+						PickedColor = settings.Colors.Enemy
+					elseif MyPlr.Team == Plr.Team and not settings.FriendList[Plr.Name] then
+						PickedColor = settings.Colors.Ally
+					else
+						PickedColor = settings.Colors.Friend
+					end
+				else
+					if settings.FriendList[Plr.Name] ~= nil then
+						PickedColor = settings.Colors.Friend
+					else
+						PickedColor = settings.Colors.Enemy
+					end
+				end
+			else
+				PickedColor = settings.Colors.ColorOverride
+			end
+		end
+	end
+
+	return PickedColor
+end
+
+function GetClosestPlayerNotBehindWall()
+	local Players = { }
+	local CurrentClosePlayer = nil
+	local SelectedPlr = nil
+
+	for _, v in next, Plrs:GetPlayers() do
+		if v ~= MyPlr then
+			local IsAlly = GetTeamColor(v)
+			if IsAlly ~= settings.Colors.Ally and IsAlly ~= settings.Colors.Friend and IsAlly ~= settings.Colors.Neutral then
+				local GetChar = v.Character
+				if MyChar and GetChar then
+					local MyHead, MyTor = MyChar:FindFirstChild("Head"), MyChar:FindFirstChild("HumanoidRootPart")
+					local GetHead, GetTor, GetHum = GetChar:FindFirstChild("Head"), GetChar:FindFirstChild("HumanoidRootPart"), GetChar:FindFirstChild("Humanoid")
+
+					if MyHead and MyTor and GetHead and GetTor and GetHum then
+						if game.PlaceId == 455366377 then
+							if not GetChar:FindFirstChild("KO") and GetHum.Health > 1 then
+								local Ray = Ray.new(MyCam.CFrame.p, (GetHead.Position - MyCam.CFrame.p).unit * 2048)
+								local part = workspace:FindPartOnRayWithIgnoreList(Ray, {MyChar})
+								if part ~= nil then
+									if part:IsDescendantOf(GetChar) then
+										local Dist = (MyTor.Position - GetTor.Position).magnitude
+										Players[v] = Dist
+									end
+								end
+							end
+						elseif game.PlaceId == 746820961 then
+							if GetHum.Health > 1 then
+								local Ray = Ray.new(MyCam.CFrame.p, (GetHead.Position - MyCam.CFrame.p).unit * 2048)
+								local part = workspace:FindPartOnRayWithIgnoreList(Ray, {MyChar, MyCam})
+								if part ~= nil then
+									if part:IsDescendantOf(GetChar) then
+										local Dist = (MyTor.Position - GetTor.Position).magnitude
+										Players[v] = Dist
+									end
+								end
+							end
+						else
+							if GetHum.Health > 1 then
+								local Ray = Ray.new(MyCam.CFrame.p, (GetHead.Position - MyCam.CFrame.p).unit * 2048)
+								local part = workspace:FindPartOnRayWithIgnoreList(Ray, {MyChar})
+								if part ~= nil then
+									if part:IsDescendantOf(GetChar) then
+										local Dist = (MyTor.Position - GetTor.Position).magnitude
+										Players[v] = Dist
+									end
+								end
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	for i, v in next, Players do
+		if CurrentClosePlayer ~= nil then
+			if v <= CurrentClosePlayer then
+				CurrentClosePlayer = v
+				SelectedPlr = i
+			end
+		else
+			CurrentClosePlayer = v
+			SelectedPlr = i
+		end
+	end
+
+	return SelectedPlr
+end
+
+function GetClosestPlayer()
+	local Players = { }
+	local CurrentClosePlayer = nil
+	local SelectedPlr = nil
+
+	for _, v in next, Plrs:GetPlayers() do
+		if v ~= MyPlr then
+			local IsAlly = GetTeamColor(v)
+			if IsAlly ~= settings.Colors.Ally and IsAlly ~= settings.Colors.Friend and IsAlly ~= settings.Colors.Neutral then
+				local GetChar = v.Character
+				if MyChar and GetChar then
+					local MyTor = MyChar:FindFirstChild("HumanoidRootPart")
+					local GetTor = GetChar:FindFirstChild("HumanoidRootPart")
+					local GetHum = GetChar:FindFirstChild("Humanoid")
+					if MyTor and GetTor and GetHum then
+						if game.PlaceId == 455366377 then
+							if not GetChar:FindFirstChild("KO") and GetHum.Health > 1 then
+								local Dist = (MyTor.Position - GetTor.Position).magnitude
+								Players[v] = Dist
+							end
+						else
+							if GetHum.Health > 1 then
+								local Dist = (MyTor.Position - GetTor.Position).magnitude
+								Players[v] = Dist
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
+	for i, v in next, Players do
+		if CurrentClosePlayer ~= nil then
+			if v <= CurrentClosePlayer then
+				CurrentClosePlayer = v
+				SelectedPlr = i
+			end
+		else
+			CurrentClosePlayer = v
+			SelectedPlr = i
+		end
+	end
+
+	return SelectedPlr
+end
+
+vflyspeed = 1
+vehicleflyspeed = 1
+function sFLY(vfly)
+	repeat wait() until game.Players.LocalPlayer and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild('HumanoidRootPart') and game.Players.LocalPlayer.Character:FindFirstChild('Humanoid')
+	repeat wait() until mouse
+
+	local T = game.Players.LocalPlayer.Character.HumanoidRootPart
+	local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+	local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+	local SPEED = 0
+
+	local function FLY()
+		settings.vfly = true
+		local BG = Instance.new('BodyGyro', T)
+		local BV = Instance.new('BodyVelocity', T)
+		BG.P = 9e4
+		BG.maxTorque = Vector3.new(9e9, 9e9, 9e9)
+		BG.cframe = T.CFrame
+		BV.velocity = Vector3.new(0, 0, 0)
+		BV.maxForce = Vector3.new(9e9, 9e9, 9e9)
+		spawn(function()
+			repeat wait()
+			if not vfly then
+				game.Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = true
+			end
+			if CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0 then
+				SPEED = 50
+			elseif not (CONTROL.L + CONTROL.R ~= 0 or CONTROL.F + CONTROL.B ~= 0 or CONTROL.Q + CONTROL.E ~= 0) and SPEED ~= 0 then
+				SPEED = 0
+			end
+			if (CONTROL.L + CONTROL.R) ~= 0 or (CONTROL.F + CONTROL.B) ~= 0 or (CONTROL.Q + CONTROL.E) ~= 0 then
+				BV.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (CONTROL.F + CONTROL.B)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(CONTROL.L + CONTROL.R, (CONTROL.F + CONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+				lCONTROL = {F = CONTROL.F, B = CONTROL.B, L = CONTROL.L, R = CONTROL.R}
+			elseif (CONTROL.L + CONTROL.R) == 0 and (CONTROL.F + CONTROL.B) == 0 and (CONTROL.Q + CONTROL.E) == 0 and SPEED ~= 0 then
+				BV.velocity = ((workspace.CurrentCamera.CoordinateFrame.lookVector * (lCONTROL.F + lCONTROL.B)) + ((workspace.CurrentCamera.CoordinateFrame * CFrame.new(lCONTROL.L + lCONTROL.R, (lCONTROL.F + lCONTROL.B + CONTROL.Q + CONTROL.E) * 0.2, 0).p) - workspace.CurrentCamera.CoordinateFrame.p)) * SPEED
+			else
+				BV.velocity = Vector3.new(0, 0, 0)
+			end
+			BG.cframe = workspace.CurrentCamera.CoordinateFrame
+			until not settings.vfly
+			CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+			lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
+			SPEED = 0
+			BG:destroy()
+			BV:destroy()
+			game.Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
+		end)
+	end
+	mouse.KeyDown:connect(function(KEY)
+		if KEY:lower() == 'w' then
+			if vfly then
+				CONTROL.F = vehicleflyspeed
+			else
+				CONTROL.F = vflyspeed
+			end
+		elseif KEY:lower() == 's' then
+			if vfly then
+				CONTROL.B = - vehicleflyspeed
+			else
+				CONTROL.B = - vflyspeed
+			end
+		elseif KEY:lower() == 'a' then
+			if vfly then
+				CONTROL.L = - vehicleflyspeed
+			else
+				CONTROL.L = - vflyspeed
+			end
+		elseif KEY:lower() == 'd' then
+			if vfly then
+				CONTROL.R = vehicleflyspeed
+			else
+				CONTROL.R = vflyspeed
+            end
+        elseif KEY:lower() == 'e' then
+            if vfly then
+                CONTROL.Q = vehicleflyspeed*2
+            else
+                CONTROL.Q = vflyspeed*2
+            end
+        elseif KEY:lower() == 'q' then
+            if vfly then
+                CONTROL.E = -vehicleflyspeed*2
+            else
+                CONTROL.E = -vflyspeed*2
+            end
+		end
+	end)
+	mouse.KeyUp:connect(function(KEY)
+		if KEY:lower() == 'w' then
+			CONTROL.F = 0
+		elseif KEY:lower() == 's' then
+			CONTROL.B = 0
+		elseif KEY:lower() == 'a' then
+			CONTROL.L = 0
+		elseif KEY:lower() == 'd' then
+            CONTROL.R = 0
+        elseif KEY:lower() == 'e' then
+            CONTROL.Q = 0
+        elseif KEY:lower() == 'q' then
+            CONTROL.E = 0
+		end
+	end)
+	FLY()
+end
+
+function NOFLY()
+	settings.vfly = false
+	game.Players.LocalPlayer.Character:FindFirstChildOfClass('Humanoid').PlatformStand = false
+end
+
+UserInput.InputBegan:connect(function(input, ingui)
+    if tostring(input.KeyCode) == settings.AimbotKey or tostring(input.UserInputType) == settings.AimbotKey then
+      settings.Aimbot = true
+    end
+end)
+
+UserInput.InputEnded:connect(function(input)
+  if tostring(input.KeyCode) == settings.AimbotKey or tostring(input.UserInputType) == settings.AimbotKey then
+    settings.Aimbot = false
+  end
+end)
+
+Run:BindToRenderStep("UpdateInfo", 1000, function()
+	settings.ClosestEnemy = GetClosestPlayer()
+	MyChar = MyPlr.Character
+	if settings.DebugInfo then
+		local MyHead, MyTor, MyHum = MyChar:FindFirstChild("Head"), MyChar:FindFirstChild("HumanoidRootPart"), MyChar:FindFirstChild("Humanoid")
+
+		local GetChar, GetHead, GetTor, GetHum = nil, nil, nil, nil
+		if settings.ClosestEnemy ~= nil then
+			GetChar = settings.ClosestEnemy.Character
+			GetHead = GetChar:FindFirstChild("Head")
+			GetTor = GetChar:FindFirstChild("HumanoidRootPart")
+			GetHum = GetChar:FindFirstChild("Humanoid")
+
+			DebugMenu["PlayerSelected"].Text = "Closest Enemy: " .. tostring(settings.ClosestEnemy)
+
+			if settings.ClosestEnemy.Team ~= nil then
+				DebugMenu["PlayerTeam"].Text = "Team: " .. tostring(settings.ClosestEnemy.Team)
+			else
+				DebugMenu["PlayerTeam"].Text = "Team: nil"
+			end
+
+			if GetHum then
+				DebugMenu["PlayerHealth"].Text = "Health: " .. string.format("%.0f", GetHum.Health)
+			end
+			if MyTor and GetTor then
+				local Pos = GetTor.Position
+				local Dist = (MyTor.Position - Pos).magnitude
+				DebugMenu["PlayerPosition"].Text = "Position: (X: " .. string.format("%.3f", Pos.X) .. " Y: " .. string.format("%.3f", Pos.Y) .. " Z: " .. string.format("%.3f", Pos.Z) .. ") Distance: " .. string.format("%.0f", Dist) .. " Studs"
+
+				local MyCharStuff = MyChar:GetDescendants()
+				local GetCharStuff = GetChar:GetDescendants()
+				for _, v in next, GetCharStuff do
+					if v ~= GetTor then
+						table.insert(MyCharStuff, v)
+					end
+				end
+				local Ray = Ray.new(MyTor.Position, (Pos - MyTor.Position).unit * 300)
+				local part = workspace:FindPartOnRayWithIgnoreList(Ray, MyCharStuff)
+				if part == GetTor then
+					DebugMenu["BehindWall"].Text = "Behind Wall: false"
+				else
+					DebugMenu["BehindWall"].Text = "Behind Wall: true"
+				end
+
+				DebugMenu["Main"].Size = UDim2.new(0, DebugMenu["PlayerPosition"].TextBounds.X, 0, 200)
+			end
+		end
+
+		-- My Position
+		if MyTor then
+			local Pos = MyTor.Position
+			DebugMenu["Position"].Text = "My Position: (X: " .. string.format("%.3f", Pos.x) .. " Y: " .. string.format("%.3f", Pos.Y) .. " Z: " .. string.format("%.3f", Pos.Z) .. ")"
+		end
+
+		-- FPS
+		local fps = math.floor(.5 + (1 / (tick() - LastTick)))
+		local sum = 0
+		local ave = 0
+		table.insert(settings.FPSAverage, fps)
+		for i = 1, #settings.FPSAverage do
+			sum = sum + settings.FPSAverage[i]
+		end
+		DebugMenu["FPS"].Text = "FPS: " .. tostring(fps) .. " Average: " .. string.format("%.0f", (sum / #settings.FPSAverage))
+		if (tick() - LastTick) >= 15 then
+			settings.FPSAverage = { }
+			LastTick = tick()
+		end
+		LastTick = tick()
+	end
+end)
+
+Run:BindToRenderStep("Aimbot", Enum.RenderPriority.First.Value, function()
+	ClosestEnemy = GetClosestPlayerNotBehindWall()
+	if settings.AimbotEnabled and settings.Aimbot then
+		if ClosestEnemy ~= nil then
+			local GetChar = ClosestEnemy.Character
+			if MyChar and GetChar then
+				local MyCharStuff = MyChar:GetDescendants()
+				local MyHead = MyChar:FindFirstChild("Head")
+				local MyTor = MyChar:FindFirstChild("HumanoidRootPart")
+				local MyHum = MyChar:FindFirstChild("Humanoid")
+				local GetHead = GetChar:FindFirstChild("Head")
+				local GetTor = GetChar:FindFirstChild("HumanoidRootPart")
+				local GetHum = GetChar:FindFirstChild("Humanoid")
+				if MyHead and MyTor and MyHum and GetHead and GetTor and GetHum then
+					if MyHum.Health > 1 and (GetHum.Health > 1 and not GetChar:FindFirstChild("KO")) then
+						MyPlr.CameraMode = Enum.CameraMode.LockFirstPerson
+						MyCam.CFrame = CFrame.new(MyHead.CFrame.p, GetHead.CFrame.p)
+						if settings.AutoFire then
+              if mouse2press() then
+							mouse1press()
+            else
+              mouse1release()
+              mouse1click()
+              end
+            end
+					end
+				end
+			end
+		end
+	else
+		MyPlr.CameraMode = settings.CameraModeBackup
+	end
+end)
+
+local succ, out = coroutine.resume(coroutine.create(function()
+	while true do
+		for _, v in next, Plrs:GetPlayers() do
+			Run.RenderStepped:wait()
+		end
+	end
+end))
+
+if not succ then
+	error(out)
+end
+
+aimbot:AddToggle("Aimbot", function(state)
+  if not (game.PlaceId == 292439477 or game.PlaceId == 606849621) then
+    settings.AimbotEnabled = not settings.AimbotEnabled
+  else
+    local hint = Instance.new("Hint", CoreGui)
+    hint.Text = "This game prevents camera manipulation!"
+    wait(5)
+    hint:Destroy()
+  end
+end)
+
+aimbot:AddToggle("Autofire", function(state)
+  if settings.AutoFire == false then
+    settings.AutoFire = true
+  else
+    settings.AutoFire = false
+  end
+end)
+
+aimbot:AddButton("Avexus#1866's FOV Aimbot", function()
+  loadstring(game:HttpGet("https://raw.githubusercontent.com/zerovectors/arsenal/master/fov_aimbot"))()
+end)
+
+visuals:AddToggle("ESP", function(state)
+  settings.CHAMSEnabled = not settings.CHAMSEnabled
+	if settings.CHAMSEnabled then
+		for _, v in next, Plrs:GetPlayers() do
+			if v ~= MyPlr then
+				if settings.CharAddedEvent[v.Name] == nil then
+					settings.CharAddedEvent[v.Name] = v.CharacterAdded:connect(function(Char)
+						if settings.CHAMSEnabled then
+							RemoveChams(v)
+							CreateChams(v)
+						end
+						repeat wait() until Char:FindFirstChild("HumanoidRootPart")
+						TracerMT[v.Name] = Char.HumanoidRootPart
+					end)
+				end
+				RemoveChams(v)
+				CreateChams(v)
+			end
+		end
+		CreateMobESPChams()
+	else
+		PlayerChams:ClearAllChildren()
+		ItemChams:ClearAllChildren()
+	end
+end)
+
+visuals:AddToggle("Tracers", function(state)
+  settings.TracersEnabled = not settings.TracersEnabled
+  if settings.TracersEnabled then
+    for _, v in next, Plrs:GetPlayers() do
+      if v ~= MyPlr then
+        if settings.CharAddedEvent[v.Name] == nil then
+          settings.CharAddedEvent[v.Name] = v.CharacterAdded:connect(function(Char)
+            if settings.TracersEnabled then
+              RemoveTracers(v)
+              CreateTracers(v)
+            end
+          end)
+        end
+        if v.Character ~= nil then
+          local Tor = v.Character:FindFirstChild("HumanoidRootPart")
+          if Tor then
+            TracerMT[v.Name] = Tor
+          end
+        end
+        RemoveTracers(v)
+        CreateTracers(v)
+      end
+    end
+  else
+    for _, v in next, Plrs:GetPlayers() do
+      RemoveTracers(v)
+    end
+  end
+end)
+
+local dropdown;
+dropdown = aimbot:AddDropdown({'Team Death Match', 'Free For All'}, function(a)
+  if a == 'Free For All' then
+    settings.FreeForAll = true
+  else
+    settings.FreeForAll = false
+  end
+end)
+
+character:AddToggle("Super Speed", function(state)
+  if settings.speed == false then
+    settings.speed = true
+    while wait() do
+      game:GetService("Players").LocalPlayer.Character.Humanoid.WalkSpeed = 50
+      if settings.speed == false then
+        break
+      end
+    end
+  else
+    settings.speed = false
+  end
+end)
+
+character:AddToggle("Super Jump", function(state)
+  if settings.jump == false then
+      settings.jump = true;
+    while wait() do
+      game.Players.LocalPlayer.Character.Humanoid.JumpPower = 200;
+      if settings.jump == false then
+        break
+      end
+    end
+  else
+      settings.jump = false;
+  end;
+end)
+
+character:AddToggle("Fly", function(state)
+  if state then
+    settings.vfly = true
+    sFLY()
+  else
+    settings.vfly = false;
+    NOFLY()
+  end
+end)
+
+miscellaneous:AddToggle("Low Gravity", function(state)
+  if state then
+    workspace.Gravity = 10
+  else
+    workspace.Gravity = 55
+  end
+end)
+
+miscellaneous:AddToggle("Instant Respawn", function(state)
+  if settings.instantrespawn == false then
+    settings.instantrespawn = true
+    while wait() do
+      if game.Players.LocalPlayer.Character.Humanoid:FindFirstChild("Died") then
+        local Event = game:GetService("ReplicatedStorage").Events.LoadCharacter
+        Event:FireServer()
+      end
+      if settings.instantrespawn == false then
+        break
+      end
+    end
+  else
+    settings.instantrespawn = false
+  end
+end)
+
+miscellaneous:AddButton2("Toggle UI Key; ' '",function()
+	game.CoreGui.UILibrary.Miscellaneous.Container.TextButton2.Text = 'Press any Key now'
+	local input = UserInput.InputBegan:wait()
+	if input.UserInputType == Enum.UserInputType.Keyboard then
+		settings.togglekey = tostring(input.KeyCode)
+		game.CoreGui.UILibrary.Miscellaneous.Container.TextButton2.Text = "Toggle UI Key; '"..string.sub(tostring(input.KeyCode), 14).."'"
+	else
+		settings.togglekey = tostring(input.UserInputType)
+		game.CoreGui.UILibrary.Miscellaneous.Container.TextButton2.Text = "Toggle UI Key; '"..string.sub(tostring(input.UserInputType), 20).."'"
+	end
+end)
+
+miscellaneous:AddButton("Rejoin", function(state)
+  game:GetService('TeleportService'):Teleport(game.PlaceId)
+end)
+
+changelog:AddLabel("V2 ( CURRENT VERSION )\n + Rewrote UI\n + Fixed cancerous button bugs\n + 300 lines shorter than the original\n + Better just better\n \nV1.3\n + Released ui\n + Bug fixes\n - Removed Chatlogs since there's too many bugs with them\n \nV1.1\n + Created UI\n + Released UI")
+
+UserInput.InputBegan:Connect(function(input)
+  if tostring(input.KeyCode) == settings.togglekey or tostring(input.UserInputType) == settings.togglekey then
+    if settings.vis == true then
+      settings.vis = false
+      for _,v in ipairs(game.CoreGui.UILibrary:GetDescendants()) do
+        if v:IsA("Frame") then
+              v.Visible = false
+           end
+         end
+    elseif settings.vis == false then
+      settings.vis = true
+      for _,v in ipairs(game.CoreGui.UILibrary:GetDescendants()) do
+        if v:IsA("Frame") then
+              v.Visible = true
+           end
+         end
+       end
+    end
+end)
+Plrs.PlayerAdded:connect(function(Plr)
+	if settings.CharAddedEvent[Plr.Name] == nil then
+		settings.CharAddedEvent[Plr.Name] = Plr.CharacterAdded:connect(function(Char)
+			if settings.TracersEnabled then
+				CreateTracers(Plr)
+			end
+			if settings.CHAMSEnabled then
+				CreateChams(Plr)
+			end
+			repeat wait() until Char:FindFirstChild("HumanoidRootPart")
+			TracerMT[Plr.Name] = Char.HumanoidRootPart
+		end)
+	end
+end)
+
+Plrs.PlayerRemoving:connect(function(Plr)
+	ChatLog(Plr)
+	if settings.CharAddedEvent[Plr.Name] ~= nil then
+		settings.CharAddedEvent[Plr.Name]:Disconnect()
+		settings.CharAddedEvent[Plr.Name] = nil
+	end
+	RemoveTracers(Plr)
+	RemoveChams(Plr)
+	TracerMT[Plr.Name] = nil
+end)
