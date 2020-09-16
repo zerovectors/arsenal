@@ -234,11 +234,6 @@ do -- main
         end
         do -- miscellaneous
             Settings.lowgrav = library.flags.lowgrav
-            Settings.gunhaxx = library.flags.gunhaxx
-            Settings.nospread = library.flags.nospread
-            Settings.noreload = library.flags.noreload
-            Settings.norecoil = library.flags.norecoil
-            Settings.infammo = library.flags.infammo
             Settings.aimbot = library.flags.aimbot
             Settings.selectedlimb = library.flags.selectedlimb
             Settings.freeforall = library.flags.freeforall
@@ -273,12 +268,6 @@ do -- main
         end
         do -- miscellaneous
             ui.miscellaneous.lowgravity:SetState(Settings.lowgrav)
-            ui.miscellaneous.gunmods:SetState(Settings.gunhaxx)
-            ui.miscellaneous.nospread:SetState(Settings.nospread)
-            ui.miscellaneous.noreload:SetState(Settings.noreload)
-            ui.miscellaneous.norecoil:SetState(Settings.norecoil)
-            ui.miscellaneous.infammo:SetState(Settings.infammo)
-            ui.miscellaneous.norecoil:SetState(Settings.norecoil)
             ui.miscellaneous.selectedlimb:SetValue(Settings.selectedlimb)
             ui.miscellaneous.freeforall:SetState(Settings.freeforall)
         end
@@ -1249,7 +1238,7 @@ do -- main
         end
     end
     function main:NoSpread()
-        wait(5)
+        wait(2)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1265,7 +1254,7 @@ do -- main
         end
     end
     function main:NoReload()
-        wait(5)
+        wait(2)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1280,7 +1269,7 @@ do -- main
         end
     end
     function main:NoRecoil()
-        wait(5)
+        wait(2)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
