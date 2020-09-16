@@ -97,7 +97,7 @@ do -- loops
     loopfunctions:RunLoop("Version_Check", function()
         local data = loadstring(game:HttpGet("https://pastebin.com/raw/MhwMYaFu", true))()
         messages_of_the_day = data.messages_of_the_day
-        data = data["Arsenal"]
+        data = data[uiname]
         local current_version, reason = data.version, data.reason
         if version ~= current_version then
             if data.force_kick then
@@ -231,6 +231,14 @@ do -- main
         end
         do -- miscellaneous
             Settings.lowgrav = library.flags.lowgrav
+            Settings.gunhaxx = library.flags.gunhaxx
+            Settings.nospread = library.flags.nospread
+            Settings.noreload = library.flags.noreload
+            Settings.norecoil = library.flags.norecoil
+            Settings.infammo = library.flags.infammo
+            Settings.aimbot = library.flags.aimbot
+            Settings.selectedlimb = library.flags.selectedlimb
+            Settings.freeforall = library.flags.freeforall
         end
         do -- ui settings
             Settings.annoyshit = library.flags.annoyshit
@@ -262,6 +270,14 @@ do -- main
         end
         do -- miscellaneous
             ui.miscellaneous.lowgravity:SetState(Settings.lowgrav)
+            ui.miscellaneous.gunmods:SetState(Settings.gunhaxx)
+            ui.miscellaneous.nospread:SetState(Settings.nospread)
+            ui.miscellaneous.noreload:SetState(Settings.noreload)
+            ui.miscellaneous.norecoil:SetState(Settings.norecoil)
+            ui.miscellaneous.infammo:SetState(Settings.infammo)
+            ui.miscellaneous.norecoil:SetState(Settings.norecoil)
+            ui.miscellaneous.selectedlimb:SetValue(Settings.selectedlimb)
+            ui.miscellaneous.freeforall:SetState(Settings.freeforall)
         end
         do -- ui settings
             main.uisettings.annoyingstuff:SetState(Settings.annoyshit)
@@ -1240,10 +1256,8 @@ do -- main
                     v.SpreadRecovery.Value = v.SpreadRecovery._ORIGINAL.Value
                     v.Spread.Value = v.Spread._ORIGINAL.Value
                     if library.flags["nospread"] then
-                        v.SpreadRecovery.Value = 0
                         v.Spread.Value = 0
                     else
-                        v.SpreadRecovery.Value = v.SpreadRecovery._ORIGINAL.Value
                         v.Spread.Value = v.Spread._ORIGINAL.Value
                     end
                 end
@@ -1500,16 +1514,10 @@ do -- main
     end
     function main:AnnoyingShitToggle()
         if library.flags["annoyshit"] then
-            main.uisettings.messagesoftheday:SetState(true)
-            main:StopMsgs()
             main.uisettings.cursor:SetState(true)
-            main:CursorTog()
             main.uisettings.watermark:SetState(true)
         else
-            main.uisettings.messagesoftheday:SetState(false)
-            main:StopMsgs()
             main.uisettings.cursor:SetState(false)
-            main:CursorTog()
             main.uisettings.watermark:SetState(false)
         end
     end
