@@ -1249,7 +1249,7 @@ do -- main
         end
     end
     function main:NoSpread()
-        wait(2)
+        wait(5)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1265,7 +1265,7 @@ do -- main
         end
     end
     function main:NoReload()
-        wait(2)
+        wait(5)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1280,7 +1280,7 @@ do -- main
         end
     end
     function main:NoRecoil()
-        wait(2)
+        wait(5)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1647,11 +1647,8 @@ do -- main
         main.TracerMT[Plr.Name] = nil
     end)
     game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Changed:Connect(function()
-        wait(2)
         main:NoSpread()
-        wait(2)
         main:NoReload()
-        wait(2)
         main:NoRecoil()
     end)
     UserInput.InputBegan:connect(function(input, ingui)
