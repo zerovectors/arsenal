@@ -284,7 +284,6 @@ do -- main
         end
         do -- ui settings
             main.uisettings.annoyingstuff:SetState(Settings.annoyshit)
-            main.uisettings.messagesoftheday:SetState(Settings.msgsoftheday)
             main.uisettings.cursor:SetState(Settings.CursorTog)
             main.uisettings.watermark:SetState(Settings.watermark)
         end
@@ -1250,7 +1249,7 @@ do -- main
         end
     end
     function main:NoSpread()
-        wait(1)
+        wait(2)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1266,7 +1265,7 @@ do -- main
         end
     end
     function main:NoReload()
-        wait(1)
+        wait(2)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1281,7 +1280,7 @@ do -- main
         end
     end
     function main:NoRecoil()
-        wait(1)
+        wait(2)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1648,8 +1647,11 @@ do -- main
         main.TracerMT[Plr.Name] = nil
     end)
     game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Changed:Connect(function()
+        wait(2)
         main:NoSpread()
+        wait(2)
         main:NoReload()
+        wait(2)
         main:NoRecoil()
     end)
     UserInput.InputBegan:connect(function(input, ingui)
