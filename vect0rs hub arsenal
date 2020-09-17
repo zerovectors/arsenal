@@ -97,7 +97,7 @@ do -- loops
     loopfunctions:RunLoop("Version_Check", function()
         local data = loadstring(game:HttpGet("https://pastebin.com/raw/MhwMYaFu", true))()
         messages_of_the_day = data.messages_of_the_day
-        data = data[uiname]
+        data = data["Arsenal"]
         local current_version, reason = data.version, data.reason
         if version ~= current_version then
             if data.force_kick then
@@ -108,9 +108,6 @@ do -- loops
             end
         end
     end, 160)
-    loopfunctions:CreateLoop("Auto Save", function()
-        main:SaveSettings()
-    end, Run.RenderStepped)
 end
 do -- main
     main.espsettings = {
@@ -234,9 +231,6 @@ do -- main
         end
         do -- miscellaneous
             Settings.lowgrav = library.flags.lowgrav
-            Settings.aimbot = library.flags.aimbot
-            Settings.selectedlimb = library.flags.selectedlimb
-            Settings.freeforall = library.flags.freeforall
         end
         do -- ui settings
             Settings.annoyshit = library.flags.annoyshit
@@ -268,11 +262,10 @@ do -- main
         end
         do -- miscellaneous
             ui.miscellaneous.lowgravity:SetState(Settings.lowgrav)
-            ui.miscellaneous.selectedlimb:SetValue(Settings.selectedlimb)
-            ui.miscellaneous.freeforall:SetState(Settings.freeforall)
         end
         do -- ui settings
             main.uisettings.annoyingstuff:SetState(Settings.annoyshit)
+            main.uisettings.messagesoftheday:SetState(Settings.msgsoftheday)
             main.uisettings.cursor:SetState(Settings.CursorTog)
             main.uisettings.watermark:SetState(Settings.watermark)
         end
@@ -282,10 +275,12 @@ do -- main
         local Settings
         if not pcall(function() readfile(Name) end) then makefolder("Vect0rs Hub") writefile(Name, game:service'HttpService':JSONEncode(library.flags)) end
         Settings = game:service'HttpService':JSONDecode(readfile(Name))
-        game.CoreGui.uwuware.watermark.Text.MouseButton1Down:Connect(function()
-            main:LoadSettings()
-            loopfunctions:RunLoop("Auto Save")
-        end)
+        if Settings.autoloadsettings then
+            game.CoreGui.uwuware.watermark.Text.MouseButton1Down:Connect(function()
+                main:LoadSettings()
+                main.uisettings.autoloadsettings:SetState(Settings.autoloadsettings)
+            end)
+        end
     end
     function main:UwU()
         main.uisettings.togglekey:SetKey("Q")
@@ -613,7 +608,7 @@ do -- main
                 until Head ~= nil or (tick() - t) >= 10
             end
             if Head == nil then return end
-            
+
             local bb = Instance.new("BillboardGui")
             bb.Adornee = Head
             bb.ExtentsOffset = Vector3.new(0, 1, 0)
@@ -622,12 +617,12 @@ do -- main
             bb.StudsOffset = Vector3.new(0, 3, 0)
             bb.Name = "ESP Crap_" .. Obj.Name
             bb.Parent = UseFolder
-            
+
             local frame = Instance.new("Frame", bb)
             frame.ZIndex = 10
             frame.BackgroundTransparency = 1
             frame.Size = UDim2.new(1, 0, 1, 0)
-            
+
             local TxtName = Instance.new("TextLabel", frame)
             TxtName.Name = "Names"
             TxtName.ZIndex = 10
@@ -638,7 +633,7 @@ do -- main
             TxtName.Font = "SourceSansBold"
             TxtName.TextSize = 13
             TxtName.TextStrokeTransparency = 0.5
-  
+
             local TxtDist = nil
             local TxtHealth = nil
             if IsPlr then
@@ -652,7 +647,7 @@ do -- main
                 TxtDist.Font = "SourceSansBold"
                 TxtDist.TextSize = 13
                 TxtDist.TextStrokeTransparency = 0.5
-  
+
                 TxtHealth = Instance.new("TextLabel", frame)
                 TxtHealth.Name = "Health"
                 TxtHealth.ZIndex = 10
@@ -667,10 +662,10 @@ do -- main
                 local ObjVal = Instance.new("ObjectValue", bb)
                 ObjVal.Value = Obj
             end
-            
+
             local PickColor = main:GetTeamColor(Obj) or main.espsettings.Colors.Neutral
             TxtName.TextColor3 = PickColor
-  
+
             if IsPlr then
                 TxtDist.TextColor3 = PickColor
                 TxtHealth.TextColor3 = PickColor
@@ -753,7 +748,7 @@ do -- main
         if Obj:IsA("Player") then
             local Find = PlayerChams:FindFirstChild(Obj.Name)
             local GetChar = Obj.Character
-  
+
             local Trans = 0
             if GetChar and MyChar then
                 local GetHead = GetChar:FindFirstChild("Head")
@@ -777,7 +772,7 @@ do -- main
                     end
                 end
             end
-  
+
             if Find then
                 for i, v in next, Find:GetChildren() do
                     if v.className ~= "ObjectValue" then
@@ -813,7 +808,7 @@ do -- main
             if Obj == nil then return end
             GetTor = Obj:FindFirstChild("HumanoidRootPart") or Obj:WaitForChild("HumanoidRootPart")
             if IsPlr then Crap = Obj:GetChildren() else Crap = Obj:GetDescendants() end
-  
+
             local FindC = ((IsPlr) and UseFolder:FindFirstChild(Obj.Name)) or main:FindCham(Obj)
             if not FindC then
                 FindC = Instance.new("Folder", UseFolder)
@@ -821,7 +816,7 @@ do -- main
                 local ObjVal = Instance.new("ObjectValue", FindC)
                 ObjVal.Value = Obj
             end
-  
+
             for _, P in next, Crap do
                 if P:IsA("PVInstance") and P.Name ~= "HumanoidRootPart" then
                     local Box = Instance.new("BoxHandleAdornment")
@@ -897,7 +892,7 @@ do -- main
             B.Transparency = 0
             B.Color3 = main:GetTeamColor(Plr) or main.espsettings.Colors.Neutral
             P.Parent = main.Tracers
-  
+
             coroutine.resume(coroutine.create(function()
                 while main.Tracers:FindFirstChild(Plr.Name) do
                     main:UpdateTracer(Plr)
@@ -1067,12 +1062,12 @@ do -- main
     function main:flyenable(vfly)
         repeat wait() until game.Players.LocalPlayer and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild('HumanoidRootPart') and game.Players.LocalPlayer.Character:FindFirstChild('Humanoid')
         repeat wait() until mouse
-  
+
         local T = game.Players.LocalPlayer.Character.HumanoidRootPart
         local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
         local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
         local SPEED = 0
-  
+
         local function FLY()
             library.flags["flytog"] = true
             local BG = Instance.new('BodyGyro', T)
@@ -1190,7 +1185,7 @@ do -- main
     function main:GetInstance(String)
         local Table = string.split(String, ".")
         local Service = game:GetService(Table[1])
-        
+
         local ObjectSoFar = Service
         for Index, Value in pairs(Table) do
             if Index ~= 1 then -- Don't run over the service.
@@ -1202,7 +1197,7 @@ do -- main
                 end
             end
         end
-        
+
         return (ObjectSoFar ~= Service and ObjectSoFar) or nil
     end
     function main:lowgravity()
@@ -1238,15 +1233,17 @@ do -- main
         end
     end
     function main:NoSpread()
-        wait(2)
+        wait(1)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
                     v.SpreadRecovery.Value = v.SpreadRecovery._ORIGINAL.Value
                     v.Spread.Value = v.Spread._ORIGINAL.Value
                     if library.flags["nospread"] then
+                        v.SpreadRecovery.Value = 0
                         v.Spread.Value = 0
                     else
+                        v.SpreadRecovery.Value = v.SpreadRecovery._ORIGINAL.Value
                         v.Spread.Value = v.Spread._ORIGINAL.Value
                     end
                 end
@@ -1254,7 +1251,7 @@ do -- main
         end
     end
     function main:NoReload()
-        wait(2)
+        wait(1)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1269,7 +1266,7 @@ do -- main
         end
     end
     function main:NoRecoil()
-        wait(2)
+        wait(1)
         for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
             if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
                 if v:FindFirstChild("Ammo") then
@@ -1312,7 +1309,7 @@ do -- main
                     if MyChar and GetChar then
                         local MyHead, MyTor = MyChar:FindFirstChild("Head"), MyChar:FindFirstChild("HumanoidRootPart")
                         local GetHead, GetTor, GetHum = GetChar:FindFirstChild("Head"), GetChar:FindFirstChild("HumanoidRootPart"), GetChar:FindFirstChild("Humanoid")
-    
+
                         if MyHead and MyTor and GetHead and GetTor and GetHum then
                             if game.PlaceId == 455366377 then
                                 if not GetChar:FindFirstChild("KO") and GetHum.Health > 1 then
@@ -1404,7 +1401,7 @@ do -- main
             local function checkOnGround(char)
                 local ray = Ray.new(char.HumanoidRootPart.Position,-(char.HumanoidRootPart.CFrame.UpVector * 100))
                 local part, pos = workspace:FindPartOnRay(ray,char)
-                
+
                 if part then
                     if pos then
                         local farness = math.ceil((char.HumanoidRootPart.Position - pos).Magnitude)
@@ -1456,7 +1453,7 @@ do -- main
                 local function checkOnGround(char)
                     local ray = Ray.new(char.HumanoidRootPart.Position,-(char.HumanoidRootPart.CFrame.UpVector * 100))
                     local part, pos = workspace:FindPartOnRay(ray,char)
-                    
+
                     if part then
                         if pos then
                             local farness = math.ceil((char.HumanoidRootPart.Position - pos).Magnitude)
@@ -1503,10 +1500,16 @@ do -- main
     end
     function main:AnnoyingShitToggle()
         if library.flags["annoyshit"] then
+            main.uisettings.messagesoftheday:SetState(true)
+            main:StopMsgs()
             main.uisettings.cursor:SetState(true)
+            main:CursorTog()
             main.uisettings.watermark:SetState(true)
         else
+            main.uisettings.messagesoftheday:SetState(false)
+            main:StopMsgs()
             main.uisettings.cursor:SetState(false)
+            main:CursorTog()
             main.uisettings.watermark:SetState(false)
         end
     end
