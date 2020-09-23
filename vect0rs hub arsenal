@@ -2,8 +2,8 @@
 local hintmsg = Instance.new("Hint", game.CoreGui)
 local attempt = tick()
 hintmsg.Text = "Initializing UI Library This Can Take Up To 30 Seconds"
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zerovectors/framework/master/vect0rs%20hub%20framework", true))()
-local version = "1"
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zerovectors/framework/master/vect0rs%20hub%20framework%20uwuware%20checkmarks", true))()
+local version = "1.1"
 local uiname = "Arsenal"
 local ui = { }
 local main = { }
@@ -13,6 +13,7 @@ function GetCamera()
 	return workspace:FindFirstChildOfClass("Camera")
 end
 local mouse = game.Players.LocalPlayer:GetMouse()
+local TweenService = game:GetService("TweenService")
 local Plrs = game.Players
 local MyPlr = Plrs.LocalPlayer
 local MyChar = MyPlr.Character
@@ -22,12 +23,14 @@ local Plrs = game:GetService("Players")
 local Run = game:GetService("RunService")
 local CoreGui = game:GetService("CoreGui")
 local PlayerGui = game.Players.LocalPlayer.PlayerGui
+local StartGui = game:GetService("StarterGui")
+local Teams = game:GetService("Teams")
 local g = MyPlr:FindFirstChild("PlayerGui") or MyPlr:WaitForChild("PlayerGui")
 local sg = game:GetService("StarterGui")
 local ps = game:GetService("Players")
-local UserInput = game:GetService("UserInputService")
 local Light = game:GetService("Lighting")
 local HTTP = game:GetService("HttpService")
+local UserInput = game:GetService("UserInputService")
 local messages_of_the_day = nil
 
 game:GetService("ScriptContext").Error:Connect(function(message)
@@ -97,7 +100,7 @@ do -- loops
     loopfunctions:RunLoop("Version_Check", function()
         local data = loadstring(game:HttpGet("https://pastebin.com/raw/MhwMYaFu", true))()
         messages_of_the_day = data.messages_of_the_day
-        data = data["Arsenal"]
+        data = data["Default UI"]
         local current_version, reason = data.version, data.reason
         if version ~= current_version then
             if data.force_kick then
@@ -108,6 +111,20 @@ do -- loops
             end
         end
     end, 160)
+    loopfunctions:CreateLoop("Messages Of The Day", function()
+        if messages_of_the_day == nil then return end
+        for i = 1, #messages_of_the_day do
+            if library.flags["msgsoftheday"] then
+                main:SystemChat(tostring(messages_of_the_day[i]))
+                wait(60)
+            end
+        end
+    end, Run.RenderStepped)
+    loopfunctions:CreateLoop("Instant Respawn", function()
+        if game.Players.LocalPlayer.Character.Humanoid:FindFirstChild("Died") then
+            game:GetService("ReplicatedStorage").Events.LoadCharacter:FireServer()
+        end
+    end, Run.RenderStepped)
 end
 do -- main
     main.espsettings = {
@@ -117,9 +134,9 @@ do -- main
         Blacklist = { };
         FriendList = { };
         Colors = {
-            Enemy = Color3.fromRGB(128, 0, 128);
-            Ally = Color3.fromRGB(221, 3, 255);
-            Friend = Color3.fromRGB(221, 3, 255);
+            Enemy = Color3.fromRGB(221, 3, 255);
+            Ally = Color3.fromRGB(255, 51, 255);
+            Friend = Color3.fromRGB(255, 51, 255);
             Neutral = Color3.fromRGB(255,255,255);
             ColorOverride = nil;
         };
@@ -129,20 +146,13 @@ do -- main
     main.creator_accounts = {
         [278723686] = true;
         [1871500307] = true;
+        [1897718733] = true;
     };
     main.admin_accounts = {
         [425451555] = true;
         [516093458] = true;
     };
-    main.whitelisted_accounts = {
-        [278723686] = true;
-        [425451555] = true;
-        [516093458] = true;
-        [454446503] = true;
-        [807746976] = true;
-        [311446911] = true;
-        [534973588] = true;
-    };
+    main.gunmain = { };
     main.VelCap = 5;
     main.JumpBoostAmt = 0.1;
     if main.espsettings.CHAMSLength > 2048 then
@@ -180,18 +190,17 @@ do -- main
         hintmsg.Text = text
     end
     function main:SystemChat(txt)
-        sg:SetCore("ChatMakeSystemMessage",
-        {
-            Text = "Vect0rs; ".. txt,
-            Color = Color3.new(248, 118, 37),
-            Font = Enum.Font.Cartoon,
-            TextSize = 18
-        })
-        local msg = g.Chat:GetDescendants()
+        msgmain = Instance.new("TextLabel", g.GUI.Main.Chats)
+        msgmain.Text = "Vect0rs; "..txt
+        msgmain.BackgroundTransparency = 1
+        msgmain.TextColor3 = Color3.new(248, 118, 37)
+        msgmain.Font = Enum.Font.Cartoon
+        msgmain.TextSize = 18
+        local msg = g.GUI.Main:GetDescendants()
         repeat
             for i, v in next, msg do
-                if v:IsA("TextLabel") or v:IsA("TextButton") then
-                    if v.Text == "Vect0rs; ".. txt then
+                if v:IsA("TextLabel") then
+                    if v.Text == "Vect0rs; "..txt then
                         msg = v
                     end
                 end
@@ -231,10 +240,16 @@ do -- main
         end
         do -- miscellaneous
             Settings.lowgrav = library.flags.lowgrav
+            Settings.instantrespawn = library.flags.instantrespawn
+            Settings.gunmodsmain = library.flags.gunmodsmain
+            Settings.norecoil = library.flags.norecoil
+            Settings.nospread = library.flags.nospread
+            Settings.allgunsauto = library.flags.allgunsauto
+            Settings.rapidfire = library.flags.rapidfire
+            Settings.infammo = library.flags.infammo
         end
         do -- ui settings
             Settings.annoyshit = library.flags.annoyshit
-            Settings.msgsoftheday = library.flags.msgsoftheday
             Settings.CursorTog = library.flags.CursorTog
             Settings.watermark = library.flags.watermark
             Settings.autoloadsettings = library.flags.autoloadsettings
@@ -262,10 +277,16 @@ do -- main
         end
         do -- miscellaneous
             ui.miscellaneous.lowgravity:SetState(Settings.lowgrav)
+            ui.miscellaneous.instantrespawn:SetState(Settings.instantrespawn)
+            ui.miscellaneous.gunmods:SetState(Settings.gunmodsmain)
+            ui.miscellaneous.norecoil:SetState(Settings.norecoil)
+            ui.miscellaneous.nospread:SetState(Settings.nospread)
+            ui.miscellaneous.allgunsauto:SetState(Settings.allgunsauto)
+            ui.miscellaneous.rapidfire:SetState(Settings.rapidfire)
+            ui.miscellaneous.infammo:SetState(Settings.infammo)
         end
         do -- ui settings
             main.uisettings.annoyingstuff:SetState(Settings.annoyshit)
-            main.uisettings.messagesoftheday:SetState(Settings.msgsoftheday)
             main.uisettings.cursor:SetState(Settings.CursorTog)
             main.uisettings.watermark:SetState(Settings.watermark)
         end
@@ -275,30 +296,9 @@ do -- main
         local Settings
         if not pcall(function() readfile(Name) end) then makefolder("Vect0rs Hub") writefile(Name, game:service'HttpService':JSONEncode(library.flags)) end
         Settings = game:service'HttpService':JSONDecode(readfile(Name))
-        if Settings.autoloadsettings then
-            game.CoreGui.uwuware.watermark.Text.MouseButton1Down:Connect(function()
-                main:LoadSettings()
-                main.uisettings.autoloadsettings:SetState(Settings.autoloadsettings)
-            end)
-        end
-    end
-    function main:UwU()
-        main.uisettings.togglekey:SetKey("Q")
-        library:Remove()
-        library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zerovectors/framework/master/vect0rs%20hub%20framework%20uwuware%20checkmarks", true))()
-        ui:Init()
-        library:Init()
-        library:Close()
-        main:AutoLoadSettings()
-    end
-    function main:Default()
-        main.uisettings.togglekey:SetKey("[")
-        library:Remove()
-        library = loadstring(game:HttpGet("https://raw.githubusercontent.com/zerovectors/framework/master/vect0rs%20hub%20framework", true))()
-        ui:Init()
-        library:Init()
-        library:Close()
-        main:AutoLoadSettings()
+        game.CoreGui.uwuware.watermark.Text.MouseButton1Down:Connect(function()
+            main:LoadSettings()
+        end)
     end
     function main:fullbright()
         if library.flags.FullBright then
@@ -608,7 +608,7 @@ do -- main
                 until Head ~= nil or (tick() - t) >= 10
             end
             if Head == nil then return end
-
+            
             local bb = Instance.new("BillboardGui")
             bb.Adornee = Head
             bb.ExtentsOffset = Vector3.new(0, 1, 0)
@@ -617,12 +617,12 @@ do -- main
             bb.StudsOffset = Vector3.new(0, 3, 0)
             bb.Name = "ESP Crap_" .. Obj.Name
             bb.Parent = UseFolder
-
+            
             local frame = Instance.new("Frame", bb)
             frame.ZIndex = 10
             frame.BackgroundTransparency = 1
             frame.Size = UDim2.new(1, 0, 1, 0)
-
+            
             local TxtName = Instance.new("TextLabel", frame)
             TxtName.Name = "Names"
             TxtName.ZIndex = 10
@@ -633,7 +633,7 @@ do -- main
             TxtName.Font = "SourceSansBold"
             TxtName.TextSize = 13
             TxtName.TextStrokeTransparency = 0.5
-
+  
             local TxtDist = nil
             local TxtHealth = nil
             if IsPlr then
@@ -647,7 +647,7 @@ do -- main
                 TxtDist.Font = "SourceSansBold"
                 TxtDist.TextSize = 13
                 TxtDist.TextStrokeTransparency = 0.5
-
+  
                 TxtHealth = Instance.new("TextLabel", frame)
                 TxtHealth.Name = "Health"
                 TxtHealth.ZIndex = 10
@@ -662,10 +662,10 @@ do -- main
                 local ObjVal = Instance.new("ObjectValue", bb)
                 ObjVal.Value = Obj
             end
-
+            
             local PickColor = main:GetTeamColor(Obj) or main.espsettings.Colors.Neutral
             TxtName.TextColor3 = PickColor
-
+  
             if IsPlr then
                 TxtDist.TextColor3 = PickColor
                 TxtHealth.TextColor3 = PickColor
@@ -748,7 +748,7 @@ do -- main
         if Obj:IsA("Player") then
             local Find = PlayerChams:FindFirstChild(Obj.Name)
             local GetChar = Obj.Character
-
+  
             local Trans = 0
             if GetChar and MyChar then
                 local GetHead = GetChar:FindFirstChild("Head")
@@ -772,7 +772,7 @@ do -- main
                     end
                 end
             end
-
+  
             if Find then
                 for i, v in next, Find:GetChildren() do
                     if v.className ~= "ObjectValue" then
@@ -808,7 +808,7 @@ do -- main
             if Obj == nil then return end
             GetTor = Obj:FindFirstChild("HumanoidRootPart") or Obj:WaitForChild("HumanoidRootPart")
             if IsPlr then Crap = Obj:GetChildren() else Crap = Obj:GetDescendants() end
-
+  
             local FindC = ((IsPlr) and UseFolder:FindFirstChild(Obj.Name)) or main:FindCham(Obj)
             if not FindC then
                 FindC = Instance.new("Folder", UseFolder)
@@ -816,7 +816,7 @@ do -- main
                 local ObjVal = Instance.new("ObjectValue", FindC)
                 ObjVal.Value = Obj
             end
-
+  
             for _, P in next, Crap do
                 if P:IsA("PVInstance") and P.Name ~= "HumanoidRootPart" then
                     local Box = Instance.new("BoxHandleAdornment")
@@ -892,7 +892,7 @@ do -- main
             B.Transparency = 0
             B.Color3 = main:GetTeamColor(Plr) or main.espsettings.Colors.Neutral
             P.Parent = main.Tracers
-
+  
             coroutine.resume(coroutine.create(function()
                 while main.Tracers:FindFirstChild(Plr.Name) do
                     main:UpdateTracer(Plr)
@@ -1062,12 +1062,12 @@ do -- main
     function main:flyenable(vfly)
         repeat wait() until game.Players.LocalPlayer and game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild('HumanoidRootPart') and game.Players.LocalPlayer.Character:FindFirstChild('Humanoid')
         repeat wait() until mouse
-
+  
         local T = game.Players.LocalPlayer.Character.HumanoidRootPart
         local CONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
         local lCONTROL = {F = 0, B = 0, L = 0, R = 0, Q = 0, E = 0}
         local SPEED = 0
-
+  
         local function FLY()
             library.flags["flytog"] = true
             local BG = Instance.new('BodyGyro', T)
@@ -1185,7 +1185,7 @@ do -- main
     function main:GetInstance(String)
         local Table = string.split(String, ".")
         local Service = game:GetService(Table[1])
-
+        
         local ObjectSoFar = Service
         for Index, Value in pairs(Table) do
             if Index ~= 1 then -- Don't run over the service.
@@ -1197,8 +1197,19 @@ do -- main
                 end
             end
         end
-
+        
         return (ObjectSoFar ~= Service and ObjectSoFar) or nil
+    end
+    function main.tables()
+        for i, v in pairs(getreg()) do
+           if type(v) == "function" then
+               for i2, v2 in pairs(getfenv(v)) do
+                   if type(v2) == "function" then
+                       main.gunmain[tostring(i2)] = v2
+                   end
+               end
+           end
+        end
     end
     function main:lowgravity()
         if library.flags["lowgrav"] then
@@ -1210,92 +1221,15 @@ do -- main
     function main:gravity(val)
         workspace.Gravity = val
     end
-    for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
-        for i2,v2 in pairs(v:GetChildren()) do
-            if v2:IsA("ValueBase") then
-                local originalvalue = Instance.new(tostring(v2.ClassName),v2)
-                originalvalue.Name = '_ORIGINAL'
-                originalvalue.Value = v2.Value
-            end
-        end
-    end
-    function main:GunHax()
-        if library.flags["gunhaxx"] then
-            ui.miscellaneous.nospread:SetState(true)
-            ui.miscellaneous.noreload:SetState(true)
-            ui.miscellaneous.norecoil:SetState(true)
-            ui.miscellaneous.infammo:SetState(true)
+    function main:InstaRespawn()
+        if library.flags.instantrespawn then
+            loopfunctions:RunLoop("Instant Respawn")
         else
-            ui.miscellaneous.nospread:SetState(false)
-            ui.miscellaneous.noreload:SetState(false)
-            ui.miscellaneous.norecoil:SetState(false)
-            ui.miscellaneous.infammo:SetState(false)
+            loopfunctions:StopLoop("Instant Respawn")
         end
     end
-    function main:NoSpread()
-        wait(1)
-        for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
-            if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
-                if v:FindFirstChild("Ammo") then
-                    v.SpreadRecovery.Value = v.SpreadRecovery._ORIGINAL.Value
-                    v.Spread.Value = v.Spread._ORIGINAL.Value
-                    if library.flags["nospread"] then
-                        v.SpreadRecovery.Value = 0
-                        v.Spread.Value = 0
-                    else
-                        v.SpreadRecovery.Value = v.SpreadRecovery._ORIGINAL.Value
-                        v.Spread.Value = v.Spread._ORIGINAL.Value
-                    end
-                end
-            end
-        end
-    end
-    function main:NoReload()
-        wait(1)
-        for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
-            if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
-                if v:FindFirstChild("Ammo") then
-                    v.ReloadTime.Value = v.ReloadTime._ORIGINAL.Value
-                    if library.flags["noreload"] then
-                        v.ReloadTime.Value = 0
-                    else
-                        v.ReloadTime.Value = v.ReloadTime._ORIGINAL.Value
-                    end
-                end
-            end
-        end
-    end
-    function main:NoRecoil()
-        wait(1)
-        for i,v in pairs(game.ReplicatedStorage.Weapons:GetChildren()) do
-            if v.Name == game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Text then
-                if v:FindFirstChild("Ammo") then
-                    v.Falloff.Value = v.Falloff._ORIGINAL.Value
-                        v.Rampup.Value = v.Falloff._ORIGINAL.Value
-                        v.RecoilControl.Value = v.RecoilControl._ORIGINAL.Value
-                    if library.flags["norecoil"] then
-                        v.Falloff.Value = 0
-                        v.Rampup.Value = 0
-                        v.RecoilControl.Value = 0
-                    else
-                        v.Falloff.Value = v.Falloff._ORIGINAL.Value
-                        v.Rampup.Value = v.Falloff._ORIGINAL.Value
-                        v.RecoilControl.Value = v.RecoilControl._ORIGINAL.Value
-                    end
-                end
-            end
-        end
-    end
-    function main:InfiniteAmmo()
-        for a,b in pairs(getgc(true)) do
-            if typeof(b) == "function" and debug.getinfo(b).name == "updateInventory" then
-                game:GetService("RunService").Stepped:Connect(function()
-                    if library.flags["infammo"] then
-                        debug.setupvalue(b,3,999)
-                    end
-                end)
-            end
-        end
+    function main:GetDatWeapon()
+        return getfenv(main.gunmain.usethatgun).gun
     end
     function main:GetClosestPlayerNotBehindWall()
         local Players = { }
@@ -1363,6 +1297,31 @@ do -- main
         end
         return SelectedPlr
     end
+    Run:BindToRenderStep("gunhax", 1, function()
+        if library.flags.norecoil then
+            getfenv(main.gunmain.usethatgun).recoil = 0
+        end
+        if library.flags.nospread then
+            getfenv(main.gunmain.usethatgun).currentspread = 0
+        end
+        if library.flags.allgunsauto then
+            getfenv(main.gunmain.usethatgun).mode = "automatic"
+        end
+        if library.flags.rapidfire then
+            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Spawned") and game:GetService("UserInputService"):IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+                if game.Players.LocalPlayer.Character:FindFirstChild("Humanoid").Health ~= 0 and game.Players.LocalPlayer.Character:FindFirstChild("Spawned") then
+                    pcall(function()
+                        main.gunmain.firebullet(true)
+                    end)
+                end
+            end
+        end
+        if library.flags.infammo then
+            if main:GetDatWeapon() ~= "none" and main:GetDatWeapon():FindFirstChild("Ammo") then -- Inf Ammo
+                debug.setupvalue(main.gunmain["updateInventory"], 3, main:GetDatWeapon():FindFirstChild("Ammo").Value)
+            end
+        end
+    end)
     Run:BindToRenderStep("Aimbot", Enum.RenderPriority.First.Value, function()
         ClosestEnemy = main:GetClosestPlayerNotBehindWall()
         if library.flags["aimbot"] and main.Aimbot then
@@ -1380,6 +1339,13 @@ do -- main
                         if MyHum.Health > 1 and (GetHum.Health > 1 and not GetChar:FindFirstChild("KO")) then
                             MyPlr.CameraMode = Enum.CameraMode.LockFirstPerson
                             MyCam.CFrame = CFrame.new(MyHead.CFrame.p, GetHead.CFrame.p)
+                            if library.flags["triggerbot"] then
+                                spawn(function()
+									mouse1press()
+									wait()
+									mouse1release()
+								end)
+                            end
                         end
                     end
                 end
@@ -1388,6 +1354,21 @@ do -- main
             MyPlr.CameraMode = main.CameraModeBackup
         end
     end)
+    function main:GunModsMain()
+        if library.flags["gunmodsmain"] then
+            ui.miscellaneous.norecoil:SetState(true)
+            ui.miscellaneous.nospread:SetState(true)
+            ui.miscellaneous.allgunsauto:SetState(true)
+            ui.miscellaneous.rapidfire:SetState(true)
+            ui.miscellaneous.infammo:SetState(true)
+        else
+            ui.miscellaneous.norecoil:SetState(false)
+            ui.miscellaneous.nospread:SetState(false)
+            ui.miscellaneous.allgunsauto:SetState(false)
+            ui.miscellaneous.rapidfire:SetState(false)
+            ui.miscellaneous.infammo:SetState(false)
+        end
+    end
     function main:Bhop()
         local UIS = game:GetService("UserInputService")
         if library.flags["bhop"] then
@@ -1401,7 +1382,7 @@ do -- main
             local function checkOnGround(char)
                 local ray = Ray.new(char.HumanoidRootPart.Position,-(char.HumanoidRootPart.CFrame.UpVector * 100))
                 local part, pos = workspace:FindPartOnRay(ray,char)
-
+                
                 if part then
                     if pos then
                         local farness = math.ceil((char.HumanoidRootPart.Position - pos).Magnitude)
@@ -1453,7 +1434,7 @@ do -- main
                 local function checkOnGround(char)
                     local ray = Ray.new(char.HumanoidRootPart.Position,-(char.HumanoidRootPart.CFrame.UpVector * 100))
                     local part, pos = workspace:FindPartOnRay(ray,char)
-
+                    
                     if part then
                         if pos then
                             local farness = math.ceil((char.HumanoidRootPart.Position - pos).Magnitude)
@@ -1500,16 +1481,10 @@ do -- main
     end
     function main:AnnoyingShitToggle()
         if library.flags["annoyshit"] then
-            main.uisettings.messagesoftheday:SetState(true)
-            main:StopMsgs()
             main.uisettings.cursor:SetState(true)
-            main:CursorTog()
             main.uisettings.watermark:SetState(true)
         else
-            main.uisettings.messagesoftheday:SetState(false)
-            main:StopMsgs()
             main.uisettings.cursor:SetState(false)
-            main:CursorTog()
             main.uisettings.watermark:SetState(false)
         end
     end
@@ -1638,11 +1613,6 @@ do -- main
         main:RemoveESP(Plr)
         main.TracerMT[Plr.Name] = nil
     end)
-    game.Players.LocalPlayer.PlayerGui.GUI.Vitals.Ammo.Gun.Changed:Connect(function()
-        main:NoSpread()
-        main:NoReload()
-        main:NoRecoil()
-    end)
     UserInput.InputBegan:connect(function(input, ingui)
         if tostring(input.KeyCode) == library.flags["aimbothotkey"] or tostring(input.UserInputType) == library.flags["aimbothotkey"] then
             main.Aimbot = true
@@ -1745,31 +1715,37 @@ do -- ui
             ui.miscellaneous.lowgravity:AddSlider({text = "Gravity", value = 196, min = 0, max = 196, callback = function(a) 
                 main:gravity(a)
             end})
-            ui.miscellaneous.gunmods = ui.miscellaneous:AddToggleFolder({text = "Gun Mods", flag = "gunhaxx", callback = function(a)
-                library.flags["gunhaxx"] = a
-                main:GunHax()
+            ui.miscellaneous.instantrespawn = ui.miscellaneous:AddToggle({text = "Instant Respawn", flag = "instantrespawn", callback = function(a)
+                library.flags["instantrespawn"] = a
+                main:InstaRespawn()
             end})
-            ui.miscellaneous.nospread = ui.miscellaneous.gunmods:AddToggle({text = "No Spread", flag = "nospread", callback = function(a)
-                library.flags["nospread"] = a
-                main:NoSpread()
-            end})
-            ui.miscellaneous.noreload = ui.miscellaneous.gunmods:AddToggle({text = "No Reload", flag = "noreload", callback = function(a)
-                library.flags["noreload"] = a
-                main:NoReload()
+            ui.miscellaneous.gunmods = ui.miscellaneous:AddToggleFolder({text = "Gun Mods", flag = "gunmodsmain", callback = function(a)
+                library.flags["gunmodsmain"] = a
+                main:GunModsMain()
             end})
             ui.miscellaneous.norecoil = ui.miscellaneous.gunmods:AddToggle({text = "No Recoil", flag = "norecoil", callback = function(a)
-                library.flags["norecoil"] = a
-                main:NoRecoil()
+                library.flags.norecoil = a
+            end})
+            ui.miscellaneous.nospread = ui.miscellaneous.gunmods:AddToggle({text = "No Spread", flag = "nospread", callback = function(a)
+                library.flags.nospread = a
+            end})
+            ui.miscellaneous.allgunsauto = ui.miscellaneous.gunmods:AddToggle({text = "All Guns Auto", flag = "allgunsauto", callback = function(a)
+                library.flags.allgunsauto = a
+            end})
+            ui.miscellaneous.rapidfire = ui.miscellaneous.gunmods:AddToggle({text = "Rapid Fire", flag = "rapidfire", callback = function(a)
+                library.flags.rapidfire = a
             end})
             ui.miscellaneous.infammo = ui.miscellaneous.gunmods:AddToggle({text = "Infinite Ammo", flag = "infammo", callback = function(a)
-                library.flags["infammo"] = a
-                main:InfiniteAmmo()
+                library.flags.infammo = a
             end})
             ui.miscellaneous.aimbot = ui.miscellaneous:AddToggleFolder({text = "Aimbot", flag = "aimbot", callback = function(a)
                 library.flags["aimbot"] = true
             end})
             ui.miscellaneous.aimbothotkey = ui.miscellaneous.aimbot:AddBind({text = "Aimbot Toggle Key", key = "MouseButton2", flag = "aimbothotkey", callback = function(a)
                 library.flags["aimbothotkey"] = "Enum.UserInputType."..ui.miscellaneous.aimbothotkey.key
+            end})
+            ui.miscellaneous.triggerbot = ui.miscellaneous.aimbot:AddToggle({text = "TriggerBot", flag = "triggerbot", callback = function(a)
+                library.flags["triggerbot"] = a
             end})
             ui.miscellaneous.selectedlimb = ui.miscellaneous.aimbot:AddList({text = "Aim Part", flag = "selectedlimb", values = {"Head", "HumanoidRootPart", "LeftUpperArm", "RightUpperArm", "LeftUpperLeg", "RightUpperLeg"}, callback = function(a)
                 library.flags["selectedlimb"] = a
@@ -1808,23 +1784,11 @@ do -- ui
             main.uisettings.togglekey = main.uisettings:AddBind({text = "Toggle UI", key = "Q", callback = function() 
                 library:Close()
             end})
-            main.uisettings.SaveSetting = main.uisettings:AddFolder("Save Options")
-            main.uisettings.SaveSetting:AddButton({text = "Save Settings", callback = function()
+            main.uisettings.savesettings = main.uisettings:AddButton({text = "Save Settings", callback = function()
                 main:SaveSettings()
             end})
-            main.uisettings.SaveSetting:AddButton({text = "Load Settings", callback = function()
-                main:LoadSettings()
-            end})
-            main.uisettings.autoloadsettings = main.uisettings.SaveSetting:AddToggle({text = "Auto Load Settings", flag = "autoloadsettings", callback = function(a)
-                library.flags["autoloadsettings"] = a
-                main:AutoLoadSettings()
-            end})
-            main.uisettings.ToggleLayout = main.uisettings:AddFolder("Toggle Layout")
-            main.uisettings.ToggleLayout:AddButton({text = "Checkmarks", callback = function()
-                main:UwU()
-            end})
-            main.uisettings.ToggleLayout:AddButton({text = "Default", callback = function()
-                main:Default()
+            main.uisettings.deletesettings = main.uisettings:AddButton({text = "Delete Settings", callback = function()
+                main:DeleteSettings()
             end})
             main.topbar = main.uisettings:AddFolder("Top Bar")
             main.topbar:AddColor({text = "Line Colour", flag = "color", color = Color3.fromRGB(221, 3, 255), callback = function(a)
@@ -1866,6 +1830,8 @@ do -- ui
     end
 end
 
+main:SystemChat("Okie, gimme a few secs to setup the ui uwu")
+main.tables()
 ui:Init()
 library:Init()
 library:Close()
@@ -1873,3 +1839,6 @@ main:AutoLoadSettings()
 main:Console("Initialization Complete, Enjoy 😎")
 main:destroyhint()
 library:SendNotification("Vect0rs Hub Loaded "..uiname.." v"..version)
+main:SystemChat("Andd Done, Have Fun Or Whatever")
+main:SystemChat("Loaded "..uiname)
+main:SystemChat("Version "..version)
