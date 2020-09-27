@@ -142,14 +142,6 @@ do -- main
         CharAddedEvent = { };
         Mob_ESP_CHAMS_Ran_Once = false;
     };
-    main.creator_accounts = {
-        [278723686] = true;
-        [1871500307] = true;
-        [1897718733] = true;
-    };
-    main.admin_accounts = {
-        [425451555] = true;
-    };
     main.gunmain = { };
     main.VelCap = 5;
     main.JumpBoostAmt = 0.1;
@@ -1589,10 +1581,10 @@ do -- main
                 main.TracerMT[Plr.Name] = Char.HumanoidRootPart
             end)
         end
-        if main.creator_accounts[Plr.UserId] then
+        if getrenv().creator_accounts[Plr.UserId] then
             library:SendNotification("Max Has Joined Your Server")
             main:SystemChat("I Have Joined Your Server")
-        elseif main.admin_accounts[Plr.UserId] then
+        elseif getrenv().admin_accounts[Plr.UserId] then
             library:SendNotification("Smail Has Joined Your Server!")
             main:SystemChat("Smail Has Joined Your Server")
         end
@@ -1602,10 +1594,10 @@ do -- main
             main.espsettings.CharAddedEvent[Plr.Name]:Disconnect()
             main.espsettings.CharAddedEvent[Plr.Name] = nil
         end
-        if main.creator_accounts[Plr.UserId] then
+        if getrenv().creator_accounts[Plr.UserId] then
             library:SendNotification("Max Has Left Your Server!")
             main:SystemChat("I Have Left Your Server")
-        elseif main.admin_accounts[Plr.UserId] then
+        elseif getrenv().admin_accounts[Plr.UserId] then
             library:SendNotification("Smail Has Left Your Server!")
             main:SystemChat("Smail Has Left Your Server")
         end
@@ -1763,7 +1755,7 @@ do -- ui
             main.uisettings:AddColor({text = "Cursor Color", flag = "cursorcolor", color = Color3.fromRGB(221, 3, 255), callback = function(a)
                 main:cursorcolor(a)
             end})
-            if main.creator_accounts[MyPlr.UserId] or main.admin_accounts[MyPlr.UserId] then
+            if if getrenv().creator_accounts[MyPlr.UserId] or getrenv().admin_accounts[MyPlr.UserId] then
                 main.uisettings.annoyingstuff = main.uisettings:AddToggleFolder({text = "Shit Smail Hates!", state = true, flag = "annoyshit", callback = function(a)
                     library.flags["annoyshit"] = a
                     main:AnnoyingShitToggle()
